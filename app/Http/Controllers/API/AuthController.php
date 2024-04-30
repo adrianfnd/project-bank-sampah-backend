@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Password;
 
 class AuthController extends Controller
 {
@@ -87,5 +88,32 @@ class AuthController extends Controller
             'message' => 'Invalid user',
             'error' => 'Unauthenticated',
         ], 401);
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 400);
+        }
+
+        $status = Password::sendResetLink($request->only('email'));
+
+        return $status === Password::RESET_LINK_SENT
+            ? response()->json([
+                'success' => true,
+                'message' => 'Password reset link sent to your email',
+            ], 200)
+            : response()->json([
+                'success' => false,
+                'message' => 'Unable to send reset link. Please try again later',
+            ], 500);
     }
 }

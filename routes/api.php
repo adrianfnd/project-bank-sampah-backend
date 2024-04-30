@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,7 +21,14 @@ use App\Http\Controllers\API\AuthController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+// Forgot Password
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+
 Route::middleware('auth:sanctum')->group(function () {
+    // Profile
+    Route::get('/profile', [UserController::class, 'profile']);
+    Route::post('/profile/update', [UserController::class, 'updateProfile']);
+
     // Logout
     Route::post('/logout', [AuthController::class, 'logout']);
 });
