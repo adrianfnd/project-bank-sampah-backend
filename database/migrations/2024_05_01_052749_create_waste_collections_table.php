@@ -18,7 +18,7 @@ class CreateWasteCollectionsTable extends Migration
             $table->integer('waste_weight');
             $table->timestamp('collection_date');
             $table->text('description')->nullable();
-            $table->unsignedBigInteger('created_by');
+            $table->string('created_by');
             $table->foreign('created_by')->references('id')->on('users');
             $table->timestamps();
         });

@@ -18,12 +18,12 @@ class CreateTransactionsTable extends Migration
             $table->timestamp('transaction_date');
             $table->string('transaction_type');
             $table->integer('total_balance_involved');
-            $table->unsignedBigInteger('user_id');
+            $table->string('user_id');
             $table->foreign('user_id')->references('id')->on('users');
             $table->text('description')->nullable();
-            $table->unsignedBigInteger('created_by');
+            $table->string('created_by');
             $table->foreign('created_by')->references('id')->on('users');
-            $table->unsignedBigInteger('xendit_id')->nullable();
+            $table->string('xendit_id')->nullable();
             $table->foreign('xendit_id')->references('id')->on('xendit_logs');
             $table->timestamps();
         });
