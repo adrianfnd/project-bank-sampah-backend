@@ -19,6 +19,7 @@ use App\Http\Controllers\API\UserController;
 
 // Auth
 Route::post('/register', [AuthController::class, 'register']);
+Route::post('/register-email-verification', [AuthController::class, 'registerEmailVerification']);
 Route::post('/login', [AuthController::class, 'login']);
 
 // Forgot Password

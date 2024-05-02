@@ -22,7 +22,12 @@ class UserRoleSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'name' => 'user',
+                'name' => 'staff',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'costumer',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

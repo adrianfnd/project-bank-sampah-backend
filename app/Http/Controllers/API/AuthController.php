@@ -26,23 +26,80 @@ class AuthController extends Controller
                 'errors' => $validator->errors(),
             ], 400);
         }
+        
+        $otp = rand(100000, 999999);
 
         $user = User::create([
+            'id' => rand(10000, 99999),
             'name' => $request->name,
             'email' => $request->email,
+            'otp' => $otp,
             'password' => bcrypt($request->password),
+            'role_id' => 3,
         ]);
 
-        $token = $user->createToken('authToken')->plainTextToken;
+        // Fungsi send mail
+        // Mail::to($request->email)->send(new OTP($otp));
 
         return response()->json([
             'success' => true,
-            'message' => 'User registered successfully',
+            'message' => 'User registered successfully otp has been sent to your email',
             'data' => [
-                'token' => $token,
+                'otp' => $otp,
                 'user' => $user,
             ],
         ], 201);
+    }
+
+    public function registerEmailVerification(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|integer',
+            'otp' => 'required|string|min:6',
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 400);
+        }
+
+        $user = User::find($request->id);
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        $otp = $user->otp;
+
+        if ($request->otp == $otp) {
+            $user->update([
+                'otp' => null,
+                'email_verified_at' => now(),
+            ]);
+
+            $token = $user->createToken('authToken')->plainTextToken;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email verified successfully',
+                'data' => [
+                    'token' => $token,
+                    'user' => $user,
+                ],
+            ], 200);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid OTP',
+                'error' => 'Unauthenticated',
+            ], 401);
+        }
     }
 
     public function login(Request $request)
@@ -50,17 +107,25 @@ class AuthController extends Controller
         $credentials = $request->only('email', 'password');
 
         if (Auth::attempt($credentials)) {
-            $user = Auth::user();
-            $token = $user->createToken('authToken')->plainTextToken;
+            if (Auth::user()->email_verified_at) {
+                $user = Auth::user();
+                $token = $user->createToken('authToken')->plainTextToken;
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Login successful',
-                'data' => [
-                    'token' => $token,
-                    'user' => $user,
-                ],
-            ], 200);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Login successful',
+                    'data' => [
+                        'token' => $token,
+                        'user' => $user,
+                    ],
+                ], 200);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email not verified',
+                    'error' => 'Unauthenticated',
+                ], 401);
+            }
         }
 
         return response()->json([
