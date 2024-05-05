@@ -12,13 +12,30 @@ class UserController extends Controller
     public function profile()
     {
         $user = Auth::user();
-
+    
+        $profileData = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'address' => $user->address,
+        ];
+    
+        if ($user->email !== null) {
+            $profileData['email'] = $user->email;
+        }
+    
+        if ($user->phone_number !== null) {
+            $profileData['phone_number'] = $user->phone_number;
+        }
+    
+        $profileData['created_at'] = $user->created_at;
+        $profileData['updated_at'] = $user->updated_at;
+    
         return response()->json([
             'success' => true,
-            'data' => $user,
+            'data' => $profileData,
         ], 200);
     }
-
+    
     public function updateProfile(Request $request)
     {
         $validator = Validator::make($request->all(), [

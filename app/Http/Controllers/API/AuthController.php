@@ -8,6 +8,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OTPMail;
 
 class AuthController extends Controller
 {
@@ -15,8 +17,11 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'address' => 'required|string|max:255',
+            'email' => 'required_without:phone_number|string|email|max:255|unique:users',
+            'phone_number' => 'required_without:email|string|max:255',            
             'password' => 'required|string|min:8',
+            'confirm_password' => 'required|same:password',
         ]);
 
         if ($validator->fails()) {
@@ -32,26 +37,33 @@ class AuthController extends Controller
         $user = User::create([
             'id' => rand(10000, 99999),
             'name' => $request->name,
-            'email' => $request->email,
+            'address' => $request->address,
+            'email' => $request->email ?? null,
+            'phone_number' => $request->phone_number ?? null,
             'otp' => $otp,
             'password' => bcrypt($request->password),
             'role_id' => 3,
         ]);
 
-        // Fungsi send mail
-        // Mail::to($request->email)->send(new OTP($otp));
+
+    
+        if ($request->email) {
+            // Fungsi kirim mail
+            Mail::to($request->email)->send(new OTPMail($otp));
+        } else if ($request->phone_number) {
+            // Fungsi kirim whatsapp
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'User registered successfully otp has been sent to your email',
             'data' => [
-                'otp' => $otp,
                 'user' => $user,
             ],
         ], 201);
     }
 
-    public function registerEmailVerification(Request $request)
+    public function registerVerification(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'id' => 'required|integer',
