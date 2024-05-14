@@ -30,6 +30,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [UserController::class, 'profile']);
     Route::post('/profile/update', [UserController::class, 'updateProfile']);
 
+    // Home
+    Route::get('/waste-collections', [HomeController::class, 'index']);
+    Route::get('/list-products', [ProductController::class, 'index']);
+
     // Logout
     Route::post('/logout', [AuthController::class, 'logout']);
 });
