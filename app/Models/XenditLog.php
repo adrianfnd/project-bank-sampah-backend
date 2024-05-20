@@ -37,4 +37,14 @@ class XenditLog extends Model
         'payment_channel',
         'payment_destination',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'users_id');
+    }
+
+    public function transaction()
+    {
+        return $this->belongsTo(Transaction::class);
+    }
 }

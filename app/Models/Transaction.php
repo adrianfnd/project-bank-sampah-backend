@@ -10,10 +10,9 @@ class Transaction extends Model
     use HasFactory;
 
     protected $fillable = [
-        'transaction_date',
         'transaction_type',
         'total_balance_involved',
-        'users_id',
+        'user_id',
         'description',
         'created_by',
         'xendit_id',
@@ -22,6 +21,16 @@ class Transaction extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'users_id');
+    }
+
+    public function xenditLog()
+    {
+        return $this->belongsTo(XenditLog::class, 'xendit_id');
+    }
+
+    public function ppobPayment()
+    {
+        return $this->hasOne(PPOBPayment::class);
     }
 
     public function createdByUser()

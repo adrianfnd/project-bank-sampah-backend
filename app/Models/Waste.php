@@ -5,19 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Product extends Model
+class Waste extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'name',
-        'description',
-        'point_cost',
-        'stock',
+        'category',
+        'weight',
+        'point',
     ];
 
-    public function productExchanges()
+    public function wasteCollections()
     {
-        return $this->belongsTo(ProductExchange::class);
+        return $this->hasMany(WasteCollection::class);
     }
 }

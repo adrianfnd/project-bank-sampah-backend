@@ -27,6 +27,7 @@ class User extends Authenticatable
         'otp',
         'email_verified_at',
         'password',
+        'current_point',
         'role_id',
     ];
 
@@ -58,5 +59,20 @@ class User extends Authenticatable
     public function transactions()
     {
         return $this->hasMany(Transaction::class, 'users_id');
+    }
+
+    public function xenditLogs()
+    {
+        return $this->hasMany(XenditLog::class);
+    }
+
+    public function productExchanges()
+    {
+        return $this->hasMany(ProductExchange::class);
+    }
+
+    public function ppobPayments()
+    {
+        return $this->hasMany(PPOBPayment::class);
     }
 }

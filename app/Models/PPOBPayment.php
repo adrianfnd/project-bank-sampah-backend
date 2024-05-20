@@ -5,18 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class WasteCollection extends Model
+class PPOBPayment extends Model
 {
     use HasFactory;
 
-    protected $table = 'waste_collections';
-
     protected $fillable = [
         'user_id',
-        'waste_id',
-        'weight_total',
-        'point_total',
-        'collection_date',
+        'transaction_id',
+        'biller_name',
+        'biller_account',
+        'amount',
+        'payment_date',
         'created_by',
     ];
 
@@ -25,9 +24,9 @@ class WasteCollection extends Model
         return $this->belongsTo(User::class, 'users_id');
     }
 
-    public function waste()
+    public function transaction()
     {
-        return $this->belongsTo(Waste::class);
+        return $this->belongsTo(Transaction::class);
     }
 
     public function createdByUser()
