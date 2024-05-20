@@ -1,7 +1,9 @@
 <?php
 
+namespace Database\Seeders;
+
 use Illuminate\Database\Seeder;
-use App\Models\Product;
+use Illuminate\Support\Facades\DB; // Import DB Facade
 use Faker\Factory as Faker;
 
 class ProductSeeder extends Seeder
@@ -16,12 +18,13 @@ class ProductSeeder extends Seeder
         $faker = Faker::create();
 
         for ($i = 0; $i < 10; $i++) {
-            Product::create([
+            DB::table('products')->insert([
                 'name' => $faker->word,
                 'description' => $faker->sentence,
-                'price' => $faker->randomFloat(2, 10, 100),
+                'point_cost' => $faker->randomFloat(2, 10, 100),
                 'stock' => $faker->numberBetween(0, 100),
-                'created_by' => $faker->randomElement([0, 100]),
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
         }
     }

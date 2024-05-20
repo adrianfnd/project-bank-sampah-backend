@@ -8,34 +8,29 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('transactions', function (Blueprint $table) {
+        Schema::create('product_exchanges', function (Blueprint $table) {
             $table->id();
-            $table->enum('transaction_type', ['penarikan', 'pertukaran_produk', 'pembayaran_tagihan']);
-            $table->float('total_balance_involved');
             $table->string('user_id');
             $table->foreign('user_id')->references('id')->on('users');
-            $table->text('description')->nullable();
+            $table->unsignedBigInteger('product_id');
+            $table->foreign('product_id')->references('id')->on('products');
+            $table->integer('quantity');
+            $table->float('total_points');
+            $table->timestamp('exchange_date');
             $table->string('created_by');
             $table->foreign('created_by')->references('id')->on('users');
-            $table->string('xendit_id')->nullable();
-            $table->foreign('xendit_id')->references('id')->on('xendit_logs');
             $table->timestamps();
         });
     }
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
-    public function down()
+    public function down(): void
     {
-        Schema::dropIfExists('transactions');
+        Schema::dropIfExists('products');
     }
 };
-

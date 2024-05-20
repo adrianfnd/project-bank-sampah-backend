@@ -15,11 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->decimal('price', 10, 2);
-            $table->string('image')->nullable();
-            $table->integer('stock')->unsigned()->default(0);
-            $table->string('created_by');
-            $table->foreign('created_by')->references('id')->on('users');
+            $table->float('point_cost');
+            $table->integer('stock');
             $table->timestamps();
         });
     }
