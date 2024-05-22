@@ -13,22 +13,39 @@ class HomeController extends Controller
     public function index()
     {
         try {
-            $organik = WasteCollection::where('description', 'Organic')
-                ->select('waste_weight', 'collection_date as point')
-                ->orderBy('collection_date', 'desc')
-                ->first();
-            
-            $nonOrganic = WasteCollection::where('description', 'Non-Organic')
-                ->select('waste_weight', 'collection_date as point')
-                ->orderBy('collection_date', 'desc')
-                ->first();
-            
-            $b3 = WasteCollection::where('description', 'B3')
-                ->select('waste_weight', 'collection_date as point')
-                ->orderBy('collection_date', 'desc')
-                ->first();
+            $user = auth()->user();
     
-            $totalPoint = WasteCollection::sum('point');
+            if (!$user) {
+                return response()->json([
+                    'message' => 'Unauthorized',
+                ], 401);
+            }
+    
+            $organik = WasteCollection::where('user_id', $user->id)
+                ->whereHas('waste', function($query) {
+                    $query->where('category', 'Organic');
+                })
+                ->select('weight_total as waste_weight', 'collection_date')
+                ->orderBy('collection_date', 'desc')
+                ->first();
+
+            $nonOrganic = WasteCollection::where('user_id', $user->id)
+                ->whereHas('waste', function($query) {
+                    $query->where('category', 'Non-Organic');
+                })
+                ->select('weight_total as waste_weight', 'collection_date')
+                ->orderBy('collection_date', 'desc')
+                ->first();
+
+            $b3 = WasteCollection::where('user_id', $user->id)
+                ->whereHas('waste', function($query) {
+                    $query->where('category', 'B3');
+                })
+                ->select('weight_total as waste_weight', 'collection_date')
+                ->orderBy('collection_date', 'desc')
+                ->first();
+
+            $totalPoint = WasteCollection::where('user_id', $user->id)->sum('point_total');
     
             return response()->json([
                 'data' => [
@@ -47,5 +64,6 @@ class HomeController extends Controller
             ], 500);
         }
     }
+    
     
 }

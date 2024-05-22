@@ -2,9 +2,11 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\API\HomeController;
+use App\Http\Controllers\API\ProductController;
+use App\Http\Controllers\API\HistoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,7 +34,17 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Home
     Route::get('/waste-collections', [HomeController::class, 'index']);
+
+    // Products
     Route::get('/list-products', [ProductController::class, 'index']);
+    Route::get('/products/{id}', [ProductController::class, 'show']);
+    Route::post('/products', [ProductController::class, 'store']);
+    Route::put('/products/{id}', [ProductController::class, 'update']);
+    Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+
+    // History
+    Route::get('/waste-collection-history', [HistoryController::class, 'wasteCollectionHistory']);
+    Route::get('/point-redemption-history', [HistoryController::class, 'pointRedemptionHistory']);
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout']);
