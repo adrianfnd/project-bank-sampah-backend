@@ -21,6 +21,7 @@ class ProductSeeder extends Seeder
             DB::table('products')->insert([
                 'name' => $faker->word,
                 'description' => $faker->sentence,
+                'image' => $faker->imageUrl(),
                 'point_cost' => $faker->randomFloat(2, 10, 100),
                 'stock' => $faker->numberBetween(0, 100),
                 'created_at' => now(),

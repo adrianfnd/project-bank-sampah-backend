@@ -38,11 +38,22 @@ class UserController extends Controller
     
     public function updateProfile(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $user = Auth::user();
+
+        $rules = [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . Auth::id(),
-            'password' => 'sometimes|string|min:8',
-        ]);
+            'address' => 'required|string|max:255',
+        ];
+
+        if ($user->email !== null) {
+            $rules['email'] = 'required|string|email|max:255|unique:users,email,' . $user->id;
+        }
+
+        if ($user->phone_number !== null) {
+            $rules['phone_number'] = 'required|string|max:15|unique:users,phone_number,' . $user->id;
+        }
+
+        $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
             return response()->json([
@@ -52,18 +63,31 @@ class UserController extends Controller
             ], 400);
         }
 
-        $user = Auth::user();
         $user->name = $request->name;
-        $user->email = $request->email;
-        if ($request->filled('password')) {
-            $user->password = bcrypt($request->password);
+        $user->address = $request->address;
+        
+        if ($user->email !== null) {
+            $user->email = $request->email;
         }
+
+        if ($user->phone_number !== null) {
+            $user->phone_number = $request->phone_number;
+        }
+
         $user->save();
 
         return response()->json([
             'success' => true,
             'message' => 'Profile updated successfully',
-            'data' => $user,
+            'data' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'address' => $user->address,
+                'email' => $user->email,
+                'phone_number' => $user->phone_number,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+            ],
         ], 200);
     }
 }

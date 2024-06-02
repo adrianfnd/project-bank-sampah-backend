@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\API;
 
 use App\Models\Product;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
@@ -14,7 +15,11 @@ class ProductController extends Controller
         try {
             $limit = $request->input('limit', 10);
 
-            $products = Product::with('creator')->limit($limit)->get();
+            $products = Product::limit($limit)->get();
+
+            $products->each(function ($product) use ($request) {
+                $product->image_url = $request->getSchemeAndHttpHost() . Storage::url('images/products/' . $product->image);
+            });
 
             return response()->json([
                 'data' => $products,
@@ -27,12 +32,12 @@ class ProductController extends Controller
         }
     }
 
-    public function show($id)
+    public function show($id, Request $request)
     {
         try {
             $product = Product::findOrFail($id);
 
-            $imageUrl = Storage::url('images/'.$product->image);
+            $imageUrl = $request->getSchemeAndHttpHost() . Storage::url('images/products/' . $product->image);
 
             return response()->json([
                 'data' => array_merge($product->toArray(), ['image_url' => $imageUrl]),
@@ -63,10 +68,13 @@ class ProductController extends Controller
 
         try {
             $image = $request->file('image');
-            $imageName = time().'.'.$image->getClientOriginalExtension();
-            $path = $image->storeAs('public/images', $imageName);
+            $imageName = time() . '_' . $request->name . '.' . $image->getClientOriginalExtension();
+            $imageName = preg_replace('/[^a-zA-Z0-9_.]/', '_', $imageName);
+            $path = $image->storeAs('public/images/products', $imageName);
 
             $product = Product::create(array_merge($request->all(), ['image' => $imageName]));
+
+            $product->image_url = $request->getSchemeAndHttpHost() . Storage::url('images/products/' . $product->image);
 
             return response()->json([
                 'message' => 'Product created successfully.',
@@ -87,29 +95,34 @@ class ProductController extends Controller
             'description' => 'string',
             'point_cost' => 'numeric',
             'stock' => 'integer',
-            'image' => 'string',
+            'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation error',
                 'errors' => $validator->errors(),
             ], 422);
         }
-
+    
         try {
             $product = Product::findOrFail($id);
-
+    
+            $updateData = $request->only(['name', 'description', 'point_cost', 'stock']);
+    
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
-                $imageName = time().'.'.$image->getClientOriginalExtension();
-                $path = $image->storeAs('public/images', $imageName);
-                Storage::delete('public/images/'.$product->image);
-                $product->image = $imageName;
+                $imageName = time() . '_' . $request->name . '.' . $image->getClientOriginalExtension();
+                $imageName = preg_replace('/[^a-zA-Z0-9_.]/', '_', $imageName);
+                $path = $image->storeAs('public/images/products', $imageName);
+                Storage::delete('public/images/products/' . $product->image);
+                $updateData['image'] = $imageName;
             }
-
-            $product->update($request->all());
-
+    
+            $product->update($updateData);
+    
+            $product->image_url = $request->getSchemeAndHttpHost() . Storage::url('images/products/' . $product->image);
+    
             return response()->json([
                 'message' => 'Product updated successfully.',
                 'data' => $product,
@@ -126,7 +139,7 @@ class ProductController extends Controller
     {
         try {
             $product = Product::findOrFail($id);
-            Storage::delete('public/images/'.$product->image);
+            Storage::delete('public/images/products/' . $product->image);
             $product->delete();
 
             return response()->json([
@@ -140,3 +153,4 @@ class ProductController extends Controller
         }
     }
 }
+

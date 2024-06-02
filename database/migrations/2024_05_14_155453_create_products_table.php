@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
+            $table->string('image')->nullable();
             $table->float('point_cost');
             $table->integer('stock');
             $table->string('image')->nullable();
