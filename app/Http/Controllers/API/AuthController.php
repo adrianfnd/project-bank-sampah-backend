@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use App\Mail\OTPMail;
 
 class AuthController extends Controller
@@ -45,14 +46,11 @@ class AuthController extends Controller
             'role_id' => 3,
         ]);
 
-
-    
-        if ($request->email) {
-            // Fungsi kirim mail
-            Mail::to($request->email)->send(new OTPMail($otp));
-        } else if ($request->phone_number) {
-            // Fungsi kirim whatsapp
-        }
+        // if ($request->email) {
+        //     Mail::to($request->email)->send(new OTPMail($otp));
+        // } else if ($request->phone_number) {
+        //     // Fungsi kirim whatsapp
+        // }
 
         return response()->json([
             'success' => true,
@@ -181,16 +179,69 @@ class AuthController extends Controller
             ], 400);
         }
 
-        $status = Password::sendResetLink($request->only('email'));
+        $user = User::where('email', $request->email)->first();
 
-        return $status === Password::RESET_LINK_SENT
-            ? response()->json([
-                'success' => true,
-                'message' => 'Password reset link sent to your email',
-            ], 200)
-            : response()->json([
+        if (!$user) {
+            return response()->json([
                 'success' => false,
-                'message' => 'Unable to send reset link. Please try again later',
-            ], 500);
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        $otp = rand(100000, 999999);
+        $user->update(['otp' => $otp]);
+
+        // Mail::to($user->email)->send(new OTPMail($otp));
+
+        return response()->json([
+            'success' => true,
+            'otp' => $otp,
+            'message' => 'OTP sent to your email',
+        ], 200);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'otp' => 'required|string|min:6',
+            'password' => 'required|string|min:8',
+            'confirm_password' => 'required|same:password',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 400);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        if ($user->otp !== $request->otp) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid OTP',
+            ], 400);
+        }
+
+        $user->update([
+            'password' => bcrypt($request->password),
+            'otp' => null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password reset successfully',
+        ], 200);
     }
 }
+
