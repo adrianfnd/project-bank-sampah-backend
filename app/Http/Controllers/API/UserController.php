@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -27,6 +28,10 @@ class UserController extends Controller
             $profileData['phone_number'] = $user->phone_number;
         }
     
+        if ($user->image !== null) {
+            $profileData['image_url'] = url(Storage::url('images/users/'.$user->image));
+        }
+    
         $profileData['created_at'] = $user->created_at;
         $profileData['updated_at'] = $user->updated_at;
     
@@ -43,6 +48,7 @@ class UserController extends Controller
         $rules = [
             'name' => 'required|string|max:255',
             'address' => 'required|string|max:255',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ];
 
         if ($user->email !== null) {
@@ -61,6 +67,18 @@ class UserController extends Controller
                 'message' => 'Validation error',
                 'errors' => $validator->errors(),
             ], 400);
+        }
+
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $imageName = time().'_'.str_replace(' ', '_', $user->name).'.'.$image->getClientOriginalExtension();
+            $path = $image->storeAs('public/images/users', $imageName);
+
+            if ($user->image) {
+                Storage::delete('public/images/users/'.$user->image);
+            }
+
+            $user->image = $imageName;
         }
 
         $user->name = $request->name;
@@ -85,6 +103,7 @@ class UserController extends Controller
                 'address' => $user->address,
                 'email' => $user->email,
                 'phone_number' => $user->phone_number,
+                'image_url' => $user->image ? url(Storage::url('images/users/'.$user->image)) : null,
                 'created_at' => $user->created_at,
                 'updated_at' => $user->updated_at,
             ],
