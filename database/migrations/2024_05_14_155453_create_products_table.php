@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('image')->nullable();
             $table->float('point_cost');
             $table->integer('stock');
-            $table->string('image')->nullable();
             $table->timestamps();
         });
     }
