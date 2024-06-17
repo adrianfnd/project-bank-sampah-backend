@@ -32,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Profile
     Route::get('/profile', [UserController::class, 'profile']);
     Route::post('/profile/update', [UserController::class, 'updateProfile']);
+    Route::post('/profile/update-password', [UserController::class, 'updatePassword']);
 
     // Home
     Route::get('/waste-collections', [HomeController::class, 'index']);
