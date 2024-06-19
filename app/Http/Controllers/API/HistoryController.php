@@ -64,7 +64,7 @@ class HistoryController extends Controller
             }
 
             $transactions = Transaction::where('user_id', $user->id)
-                ->where('transaction_type', 'point_redemption')
+                ->where('transaction_type', 'penarikan')
                 ->orderBy('created_at', 'desc')
                 ->with(['ppobPayment'])
                 ->get();

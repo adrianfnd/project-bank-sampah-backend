@@ -9,6 +9,8 @@ class PPOBPayment extends Model
 {
     use HasFactory;
 
+    protected $table = 'ppob_payments';
+    
     protected $fillable = [
         'user_id',
         'transaction_id',
