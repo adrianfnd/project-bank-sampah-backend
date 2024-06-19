@@ -12,11 +12,24 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(UserRoleSeeder::class);
-        $this->call(UserRolePermissionSeeder::class);
-        $this->call(UserRoleHasPermissionSeeder::class);
+        $this->call([
+            UserRoleSeeder::class,
+            UserRolePermissionSeeder::class,
+            UserRoleHasPermissionSeeder::class,
+        ]);
 
-        // Faker
-        $this->call(ProductSeeder::class);
+        // Development
+        $this->call([
+            UsersSeeder::class,
+            XenditLogsSeeder::class,
+            WastesSeeder::class,
+            WasteBanksSeeder::class,
+            WasteCollectionsSeeder::class,
+            TransactionsSeeder::class,
+            ProductsSeeder::class,
+            ProductExchangesSeeder::class,
+            PpobPaymentsSeeder::class,
+            NotificationsSeeder::class,
+        ]);
     }
 }
