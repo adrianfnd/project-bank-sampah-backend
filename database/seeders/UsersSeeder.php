@@ -18,7 +18,7 @@ class UsersSeeder extends Seeder
 
         $users = [
             [
-                'id' => Str::uuid(),
+                'id' => rand(10000, 99999),
                 'name' => 'Admin User',
                 'address' => 'Jl Bandung',
                 'email' => 'admin@gmail.com',
@@ -29,12 +29,11 @@ class UsersSeeder extends Seeder
                 'password' => bcrypt('password'),
                 'current_point' => 0,
                 'role_id' => $roles['admin'],
-                'remember_token' => Str::random(10),
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
-                'id' => Str::uuid(),
+                'id' => rand(10000, 99999),
                 'name' => 'Staff User',
                 'address' => 'Jl Bandung',
                 'email' => 'staff@gmail.com',
@@ -45,12 +44,11 @@ class UsersSeeder extends Seeder
                 'password' => bcrypt('password'),
                 'current_point' => 0,
                 'role_id' => $roles['staff'],
-                'remember_token' => Str::random(10),
                 'created_at' => now(),
                 'updated_at' => now()
             ],
             [
-                'id' => Str::uuid(),
+                'id' => rand(10000, 99999),
                 'name' => 'Customer User',
                 'address' => 'Jl Bandung',
                 'email' => 'customer@gmail.com',
@@ -61,7 +59,6 @@ class UsersSeeder extends Seeder
                 'password' => bcrypt('password'),
                 'current_point' => 0,
                 'role_id' => $roles['costumer'],
-                'remember_token' => Str::random(10),
                 'created_at' => now(),
                 'updated_at' => now()
             ]
