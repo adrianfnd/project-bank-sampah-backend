@@ -17,6 +17,7 @@ class WasteCollection extends Model
         'weight_total',
         'point_total',
         'collection_date',
+        'confirmation_status',
         'created_by',
     ];
 

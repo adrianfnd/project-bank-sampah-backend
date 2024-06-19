@@ -22,6 +22,7 @@ return new class extends Migration
             $table->float('weight_total');
             $table->float('point_total');
             $table->timestamp('collection_date');
+            $table->enum('confirmation_status', ['menunggu_konfirmasi', 'dikonfirmasi', 'batal'])->default('menunggu_konfirmasi');
             $table->string('created_by');
             $table->foreign('created_by')->references('id')->on('users');
             $table->timestamps();

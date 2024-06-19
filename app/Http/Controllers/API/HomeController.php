@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\WasteCollection;
+use App\Models\WasteBank;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -10,7 +11,7 @@ use Illuminate\Support\Facades\Validator;
 
 class HomeController extends Controller
 {
-    public function index(Request $request)
+    public function wasteCollection(Request $request)
     {
         try {
             $user = auth()->user();
@@ -75,6 +76,30 @@ class HomeController extends Controller
                         'b3' => $b3,
                     ],
                 ]
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function wasteBank() 
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return response()->json([
+                    'message' => 'Unauthorized',
+                ], 401);
+            }
+
+            $wasteBank = WasteBank::where('user_id', $user->id)->first();
+
+            return response()->json([
+                'waste_bank' => $wasteBank->name
             ], 200);
         } catch (\Exception $e) {
             return response()->json([

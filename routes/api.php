@@ -7,6 +7,7 @@ use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\HomeController;
 use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\HistoryController;
+use App\Http\Controllers\API\ProductExchangeController;
 use App\Http\Controllers\API\NotificationController;
 
 /*
@@ -38,7 +39,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile/update-password', [UserController::class, 'updatePassword']);
 
     // Home
-    Route::get('/waste-collections', [HomeController::class, 'index']);
+    Route::get('/waste-collections', [HomeController::class, 'wasteCollection']);
+    Route::get('/waste-banks', [HomeController::class, 'wasteBank']);
 
     // Products
     Route::get('/list-products', [ProductController::class, 'index']);
@@ -50,8 +52,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // Pickup Request
     Route::post('/pickup-requests', [TransactionController::class, 'createPickupRequest']);
 
+    // Product Exchange
+    Route::post('/product-exchange', [ProductExchangeController::class, 'exchangeProduct'])->middleware('auth');
+
+    // Waste Collection
+    Route::post('/waste-collections', [WasteCollectionController::class, 'createWasteCollection']);
+
     // Notification
-    Route::get('/list-notifications', [NotificationController::class, 'getUserNotifications']);
+    Route::get('/list-notifications', [NotificationController::class, 'getCostomerNotifications']);
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -65,8 +73,16 @@ Route::middleware('auth:sanctum')->prefix('staff')->group(function () {
     Route::put('/products/{id}', [ProductController::class, 'update']);
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
+    // Waste Collection
+    Route::get('/waste-collections', [WasteCollectionController::class, 'index']);
+    Route::put('/waste-collections/{id}/confirm', [WasteCollectionController::class, 'confirmWasteCollection']);
+    Route::post('/waste-collections/{id}/submit', [WasteCollectionController::class, 'submitWasteCollection']);
+
     // Notification
     Route::get('/list-notifications', [NotificationController::class, 'getStaffNotifications']);
+
+    // Logout
+    Route::post('/logout', [AuthController::class, 'logout']);
 });
 
 

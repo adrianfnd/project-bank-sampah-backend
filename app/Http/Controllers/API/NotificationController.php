@@ -4,56 +4,80 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Validator;
 
 class NotificationController extends Controller
 {
-    public function getUserNotifications()
+    public function getCostomerNotifications()
     {
-        $user = Auth::user();
+        try {
+            $customerCostumers = User::whereHas('role', function ($query) {
+                $query->where('name', 'costumer');
+            })->pluck('id');
 
-        $notifications = Notification::where('user_id', $user->id)
-            ->get()
-            ->map(function ($notification) {
-                return [
-                    'id' => $notification->id,
-                    'title' => $notification->title,
-                    'user_id' => $notification->user_id,
-                    'description' => $notification->description,
-                    'type' => $notification->type,
-                    'status' => $notification->status,
-                    'date' => $notification->created_at->toDateString(),
-                    'created_at' => $notification->created_at,
-                    'updated_at' => $notification->updated_at,
-                ];
-            });
+            $notifications = Notification::whereIn('user_id', $customerCostumers)
+                ->get()
+                ->map(function ($notification) {
+                    return [
+                        'id' => $notification->id,
+                        'title' => $notification->title,
+                        'user_id' => $notification->user_id,
+                        'description' => $notification->description,
+                        'type' => $notification->type,
+                        'status' => $notification->status,
+                        'date' => $notification->created_at->toDateString(),
+                        'created_at' => $notification->created_at,
+                        'updated_at' => $notification->updated_at,
+                    ];
+                });
 
-        return response()->json([
-            'data' => $notifications,
-        ], 200);
+            return response()->json([
+                'data' => $notifications,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function getStaffNotifications()
     {
-        $notifications = Notification::where('user_id', null)
-            ->get()
-            ->map(function ($notification) {
-                return [
-                    'id' => $notification->id,
-                    'title' => $notification->title,
-                    'user_id' => $notification->user_id,
-                    'description' => $notification->description,
-                    'type' => $notification->type,
-                    'status' => $notification->status,
-                    'date' => $notification->created_at->toDateString(),
-                    'created_at' => $notification->created_at,
-                    'updated_at' => $notification->updated_at,
-                ];
-            });
+        try {
+            $staffUsers = User::whereHas('role', function ($query) {
+                $query->where('name', 'staff');
+            })->pluck('id');
 
-        return response()->json([
-            'data' => $notifications,
-        ], 200);
+            $notifications = Notification::whereIn('user_id', $staffUsers)
+                ->get()
+                ->map(function ($notification) {
+                    return [
+                        'id' => $notification->id,
+                        'title' => $notification->title,
+                        'user_id' => $notification->user_id,
+                        'description' => $notification->description,
+                        'type' => $notification->type,
+                        'status' => $notification->status,
+                        'date' => $notification->created_at->toDateString(),
+                        'created_at' => $notification->created_at,
+                        'updated_at' => $notification->updated_at,
+                    ];
+                });
+
+            return response()->json([
+                'data' => $notifications,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }
+

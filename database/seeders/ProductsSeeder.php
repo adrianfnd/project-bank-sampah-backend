@@ -15,7 +15,7 @@ class ProductsSeeder extends Seeder
     {
         $products = [];
         for ($i = 1; $i <= 10; $i++) {
-            $point_cost = rand(10000, 100000);
+            $point_cost = rand(1000, 10000);
             $products[] = [
                 'id' => $i,
                 'name' => 'Product ' . $i,
