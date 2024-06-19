@@ -28,6 +28,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
+// User
 Route::middleware('auth:sanctum')->group(function () {
     // Profile
     Route::get('/profile', [UserController::class, 'profile']);
@@ -39,17 +40,32 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Products
     Route::get('/list-products', [ProductController::class, 'index']);
-    Route::get('/products/{id}', [ProductController::class, 'show']);
-    Route::post('/products', [ProductController::class, 'store']);
-    Route::put('/products/{id}', [ProductController::class, 'update']);
-    Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
     // History
     Route::get('/waste-collection-history', [HistoryController::class, 'wasteCollectionHistory']);
     Route::get('/point-redemption-history', [HistoryController::class, 'pointRedemptionHistory']);
 
+    // Pickup Request
+    Route::post('/pickup-requests', [TransactionController::class, 'createPickupRequest']);
+
+    // Notification
+    Route::get('/notifications', [NotificationController::class, 'getUserNotifications']);
+
     // Logout
     Route::post('/logout', [AuthController::class, 'logout']);
 });
+
+Route::middleware('auth:sanctum')->prefix('staff')->group(function () {
+    // Products
+    Route::get('/list-products', [ProductController::class, 'index']);
+    Route::get('/products/{id}', [ProductController::class, 'show']);
+    Route::post('/products', [ProductController::class, 'store']);
+    Route::put('/products/{id}', [ProductController::class, 'update']);
+    Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+
+    // Notification
+    Route::get('/notifications', [NotificationController::class, 'getStaffNotifications']);
+});
+
 
 
