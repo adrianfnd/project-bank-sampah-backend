@@ -7,6 +7,7 @@ use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\HomeController;
 use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\HistoryController;
+use App\Http\Controllers\API\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,7 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/pickup-requests', [TransactionController::class, 'createPickupRequest']);
 
     // Notification
-    Route::get('/notifications', [NotificationController::class, 'getUserNotifications']);
+    Route::get('/list-notifications', [NotificationController::class, 'getUserNotifications']);
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -64,7 +65,7 @@ Route::middleware('auth:sanctum')->prefix('staff')->group(function () {
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
     // Notification
-    Route::get('/notifications', [NotificationController::class, 'getStaffNotifications']);
+    Route::get('/list-notifications', [NotificationController::class, 'getStaffNotifications']);
 });
 
 
