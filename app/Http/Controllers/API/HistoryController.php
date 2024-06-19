@@ -64,9 +64,9 @@ class HistoryController extends Controller
             }
 
             $transactions = Transaction::where('user_id', $user->id)
-                ->where('transaction_type', 'penarikan')
+                ->where('transaction_type', 'pembayaran_tagihan')
                 ->orderBy('created_at', 'desc')
-                ->with(['ppobPayment'])
+                ->with(['ppobPayment','xenditLog'])
                 ->get();
 
             $data = $transactions->map(function($transaction) {

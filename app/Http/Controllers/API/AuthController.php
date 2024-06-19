@@ -46,11 +46,11 @@ class AuthController extends Controller
             'role_id' => 3,
         ]);
 
-        // if ($request->email) {
-        //     Mail::to($request->email)->send(new OTPMail($otp));
-        // } else if ($request->phone_number) {
-        //     // Fungsi kirim whatsapp
-        // }
+        if ($request->email) {
+            Mail::to($request->email)->send(new OTPMail($otp));
+        } else if ($request->phone_number) {
+            // Fungsi kirim whatsapp
+        }
 
         return response()->json([
             'success' => true,
@@ -60,6 +60,51 @@ class AuthController extends Controller
             ],
         ], 201);
     }
+
+    public function registerResendOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required_without:phone_number|email',
+            'phone_number' => 'required_without:email|string',
+        ]);
+    
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 400);
+        }
+    
+        $user = User::where('email', $request->email)
+                    ->orWhere('phone_number', $request->phone_number)
+                    ->first();
+    
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found',
+            ], 404);
+        }
+    
+        $otp = rand(100000, 999999);
+        $user->update(['otp' => $otp]);
+    
+        if ($request->email) {
+            Mail::to($user->email)->send(new OTPMail($otp));
+        } else if ($request->phone_number) {
+            // Fungsi kirim whatsapp
+        }
+    
+        return response()->json([
+            'success' => true,
+            'message' => 'OTP resent successfully',
+            'data' => [
+                'user' => $user,
+            ],
+        ], 200);
+    }
+    
 
     public function registerVerification(Request $request)
     {

@@ -14,8 +14,20 @@ class NotificationController extends Controller
         $user = Auth::user();
 
         $notifications = Notification::where('user_id', $user->id)
-            ->orWhere('user_id', null)
-            ->get();
+            ->get()
+            ->map(function ($notification) {
+                return [
+                    'id' => $notification->id,
+                    'title' => $notification->title,
+                    'user_id' => $notification->user_id,
+                    'description' => $notification->description,
+                    'type' => $notification->type,
+                    'status' => $notification->status,
+                    'date' => $notification->created_at->toDateString(),
+                    'created_at' => $notification->created_at,
+                    'updated_at' => $notification->updated_at,
+                ];
+            });
 
         return response()->json([
             'data' => $notifications,
@@ -24,7 +36,21 @@ class NotificationController extends Controller
 
     public function getStaffNotifications()
     {
-        $notifications = Notification::where('user_id', null)->get();
+        $notifications = Notification::where('user_id', null)
+            ->get()
+            ->map(function ($notification) {
+                return [
+                    'id' => $notification->id,
+                    'title' => $notification->title,
+                    'user_id' => $notification->user_id,
+                    'description' => $notification->description,
+                    'type' => $notification->type,
+                    'status' => $notification->status,
+                    'date' => $notification->created_at->toDateString(),
+                    'created_at' => $notification->created_at,
+                    'updated_at' => $notification->updated_at,
+                ];
+            });
 
         return response()->json([
             'data' => $notifications,

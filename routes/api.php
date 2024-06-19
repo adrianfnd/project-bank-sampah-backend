@@ -22,6 +22,7 @@ use App\Http\Controllers\API\NotificationController;
 
 // Auth
 Route::post('/register', [AuthController::class, 'register']);
+Route::post('/register-resend-otp', [AuthController::class, 'registerResendOtp']);
 Route::post('/register-verification', [AuthController::class, 'registerVerification']);
 Route::post('/login', [AuthController::class, 'login']);
 
