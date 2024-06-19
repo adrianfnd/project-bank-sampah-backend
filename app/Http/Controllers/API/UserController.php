@@ -14,6 +14,12 @@ class UserController extends Controller
     public function profile()
     {
         $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Unauthorized',
+            ], 401);
+        }
     
         $profileData = [
             'id' => $user->id,
@@ -45,6 +51,12 @@ class UserController extends Controller
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Unauthorized',
+            ], 401);
+        }
 
         $rules = [
             'name' => 'required|string|max:255',
@@ -114,6 +126,12 @@ class UserController extends Controller
     public function updatePassword(Request $request)
     {
         $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Unauthorized',
+            ], 401);
+        }
 
         $rules = [
             'current_password' => 'required|string',

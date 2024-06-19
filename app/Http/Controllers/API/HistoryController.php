@@ -7,10 +7,11 @@ use App\Models\Transaction;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class HistoryController extends Controller
 {
-    public function wasteCollectionHistory()
+    public function wasteCollectionHistory(Request $request)
     {
         try {
             $user = Auth::user();
@@ -21,7 +22,24 @@ class HistoryController extends Controller
                 ], 401);
             }
 
+            $validator = Validator::make($request->all(), [
+                'month' => 'required|integer|min:1|max:12',
+                'year' => 'required|integer|min:1900|max:' . date('Y'),
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation error',
+                    'errors' => $validator->errors(),
+                ], 400);
+            }
+
+            $month = $request->input('month');
+            $year = $request->input('year');
+
             $wasteCollections = WasteCollection::where('user_id', $user->id)
+                ->whereMonth('collection_date', $month)
+                ->whereYear('collection_date', $year)
                 ->with(['waste'])
                 ->orderBy('collection_date', 'desc')
                 ->get();
@@ -32,6 +50,7 @@ class HistoryController extends Controller
                     'description' => $collection->description,
                     'weight_total' => $collection->weight_total,
                     'point_total' => $collection->point_total,
+                    'confirmation_status' => ucwords(str_replace('_', ' ', $collection->confirmation_status)),
                     'details' => [
                         'Organic' => $collection->waste->where('category', 'Organic')->sum('weight'),
                         'Non Organic' => $collection->waste->where('category', 'Non-Organic')->sum('weight'),
@@ -52,7 +71,7 @@ class HistoryController extends Controller
         }
     }
 
-    public function pointRedemptionHistory()
+    public function pointRedemptionHistory(Request $request)
     {
         try {
             $user = Auth::user();
@@ -63,10 +82,27 @@ class HistoryController extends Controller
                 ], 401);
             }
 
+            $validator = Validator::make($request->all(), [
+                'month' => 'required|integer|min:1|max:12',
+                'year' => 'required|integer|min:1900|max:' . date('Y'),
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation error',
+                    'errors' => $validator->errors(),
+                ], 400);
+            }
+
+            $month = $request->input('month');
+            $year = $request->input('year');
+
             $transactions = Transaction::where('user_id', $user->id)
+                ->whereMonth('created_at', $month)
+                ->whereYear('created_at', $year)
                 ->where('transaction_type', 'pembayaran_tagihan')
                 ->orderBy('created_at', 'desc')
-                ->with(['ppobPayment','xenditLog'])
+                ->with(['ppobPayment', 'xenditLog'])
                 ->get();
 
             $data = $transactions->map(function($transaction) {

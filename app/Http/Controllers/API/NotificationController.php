@@ -15,6 +15,14 @@ class NotificationController extends Controller
     public function getCostomerNotifications()
     {
         try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return response()->json([
+                    'message' => 'Unauthorized',
+                ], 401);
+            }
+
             $customerCostumers = User::whereHas('role', function ($query) {
                 $query->where('name', 'costumer');
             })->pluck('id');
@@ -49,6 +57,14 @@ class NotificationController extends Controller
     public function getStaffNotifications()
     {
         try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return response()->json([
+                    'message' => 'Unauthorized',
+                ], 401);
+            }
+
             $staffUsers = User::whereHas('role', function ($query) {
                 $query->where('name', 'staff');
             })->pluck('id');

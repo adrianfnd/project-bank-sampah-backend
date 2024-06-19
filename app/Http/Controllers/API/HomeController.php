@@ -14,7 +14,7 @@ class HomeController extends Controller
     public function wasteCollection(Request $request)
     {
         try {
-            $user = auth()->user();
+            $user = Auth::user();
 
             if (!$user) {
                 return response()->json([
