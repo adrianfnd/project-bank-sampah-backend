@@ -16,6 +16,7 @@ class XenditLogsSeeder extends Seeder
     {
         $logs = [];
         for ($i = 1; $i <= 10; $i++) {
+            $amount = rand(10000, 100000);
             $logs[] = [
                 'id' => Str::random(10),
                 'external_id' => Str::random(10),
@@ -24,13 +25,13 @@ class XenditLogsSeeder extends Seeder
                 'payment_method' => 'bank_transfer',
                 'status' => 'success',
                 'merchant_name' => 'Merchant ' . $i,
-                'amount' => rand(10000, 100000),
-                'paid_amount' => rand(10000, 100000),
+                'amount' => $amount,
+                'paid_amount' => $amount,
                 'bank_code' => 'BCA',
                 'paid_at' => now(),
                 'payer_email' => 'payer' . $i . '@example.com',
                 'description' => 'Payment for order ' . $i,
-                'adjusted_received_amount' => rand(10000, 100000),
+                'adjusted_received_amount' => $amount,
                 'fees_paid_amount' => rand(1000, 10000),
                 'updated' => now(),
                 'created' => now(),

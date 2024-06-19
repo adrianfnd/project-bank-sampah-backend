@@ -15,10 +15,11 @@ class TransactionsSeeder extends Seeder
     {
         $transactions = [];
         for ($i = 1; $i <= 10; $i++) {
+            $amount = rand(10000, 100000);
             $transactions[] = [
                 'id' => $i,
                 'transaction_type' => ['penarikan', 'pertukaran_produk', 'pembayaran_tagihan'][array_rand(['penarikan', 'pertukaran_produk', 'pembayaran_tagihan'])],
-                'total_balance_involved' => rand(10000, 100000),
+                'total_balance_involved' => $amount,
                 'user_id' => DB::table('users')->inRandomOrder()->first()->id,
                 'description' => 'Transaction ' . $i,
                 'created_by' => DB::table('users')->inRandomOrder()->first()->id,

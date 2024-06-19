@@ -14,25 +14,58 @@ class UsersSeeder extends Seeder
      */
     public function run(): void
     {
-        $users = [];
-        for ($i = 1; $i <= 10; $i++) {
-            $users[] = [
+        $roles = DB::table('roles')->pluck('id', 'name');
+
+        $users = [
+            [
                 'id' => Str::uuid(),
-                'name' => 'User ' . $i,
-                'address' => 'Address ' . $i,
-                'email' => 'user' . $i . '@example.com',
-                'phone_number' => '08123456789' . $i,
+                'name' => 'Admin User',
+                'address' => 'Jl Bandung',
+                'email' => 'admin@gmail.com',
+                'phone_number' => '0812345678901',
                 'image' => null,
                 'otp' => null,
                 'email_verified_at' => now(),
                 'password' => bcrypt('password'),
                 'current_point' => 0,
-                'role_id' => rand(1, 3),
+                'role_id' => $roles['admin'],
                 'remember_token' => Str::random(10),
                 'created_at' => now(),
                 'updated_at' => now()
-            ];
-        }
+            ],
+            [
+                'id' => Str::uuid(),
+                'name' => 'Staff User',
+                'address' => 'Jl Bandung',
+                'email' => 'staff@gmail.com',
+                'phone_number' => '0812345678902',
+                'image' => null,
+                'otp' => null,
+                'email_verified_at' => now(),
+                'password' => bcrypt('password'),
+                'current_point' => 0,
+                'role_id' => $roles['staff'],
+                'remember_token' => Str::random(10),
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+            [
+                'id' => Str::uuid(),
+                'name' => 'Customer User',
+                'address' => 'Jl Bandung',
+                'email' => 'customer@gmail.com',
+                'phone_number' => '0812345678903',
+                'image' => null,
+                'otp' => null,
+                'email_verified_at' => now(),
+                'password' => bcrypt('password'),
+                'current_point' => 0,
+                'role_id' => $roles['costumer'],
+                'remember_token' => Str::random(10),
+                'created_at' => now(),
+                'updated_at' => now()
+            ]
+        ];
 
         DB::table('users')->insert($users);
     }

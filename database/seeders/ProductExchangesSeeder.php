@@ -15,12 +15,13 @@ class ProductExchangesSeeder extends Seeder
     {
         $exchanges = [];
         for ($i = 1; $i <= 10; $i++) {
+            $total_points = rand(10000, 100000);
             $exchanges[] = [
                 'id' => $i,
                 'user_id' => DB::table('users')->inRandomOrder()->first()->id,
                 'product_id' => DB::table('products')->inRandomOrder()->first()->id,
                 'quantity' => rand(1, 10),
-                'total_points' => rand(10, 100),
+                'total_points' => $total_points,
                 'exchange_date' => now(),
                 'created_by' => DB::table('users')->inRandomOrder()->first()->id,
                 'created_at' => now(),

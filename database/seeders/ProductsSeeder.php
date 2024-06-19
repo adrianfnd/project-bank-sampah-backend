@@ -15,12 +15,13 @@ class ProductsSeeder extends Seeder
     {
         $products = [];
         for ($i = 1; $i <= 10; $i++) {
+            $point_cost = rand(10000, 100000);
             $products[] = [
                 'id' => $i,
                 'name' => 'Product ' . $i,
                 'description' => 'Description for product ' . $i,
                 'image' => null,
-                'point_cost' => rand(10, 100),
+                'point_cost' => $point_cost,
                 'stock' => rand(1, 50),
                 'created_at' => now(),
                 'updated_at' => now()

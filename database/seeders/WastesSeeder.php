@@ -16,12 +16,13 @@ class WastesSeeder extends Seeder
     {
         $wastes = [];
         for ($i = 1; $i <= 10; $i++) {
+            $amount = rand(10000, 100000);
             $wastes[] = [
                 'id' => $i,
                 'name' => 'Waste ' . $i,
                 'category' => ['organic', 'non_organic', 'b3'][array_rand(['organic', 'non_organic', 'b3'])],
                 'weight' => rand(1, 10),
-                'point' => rand(1, 100),
+                'point' => $amount,
                 'created_at' => now(),
                 'updated_at' => now()
             ];

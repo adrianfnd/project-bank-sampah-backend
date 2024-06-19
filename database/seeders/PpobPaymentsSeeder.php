@@ -15,13 +15,14 @@ class PpobPaymentsSeeder extends Seeder
     {
         $payments = [];
         for ($i = 1; $i <= 10; $i++) {
+            $amount = rand(10000, 100000);
             $payments[] = [
                 'id' => $i,
                 'user_id' => DB::table('users')->inRandomOrder()->first()->id,
                 'transaction_id' => DB::table('transactions')->inRandomOrder()->first()->id,
                 'biller_name' => 'Biller ' . $i,
                 'biller_account' => 'Account ' . $i,
-                'amount' => rand(10000, 100000),
+                'amount' => $amount,
                 'payment_date' => now(),
                 'created_by' => DB::table('users')->inRandomOrder()->first()->id,
                 'created_at' => now(),
