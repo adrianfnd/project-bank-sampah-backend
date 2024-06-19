@@ -47,14 +47,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/list-products', [ProductController::class, 'index']);
 
     // History
-    Route::get('/waste-collection-history', [HistoryController::class, 'wasteCollectionHistory']);
-    Route::get('/point-redemption-history', [HistoryController::class, 'pointRedemptionHistory']);
+    Route::get('/waste-collection-history', [HistoryController::class, 'wasteCollectionHistoryCostumer']);
+    Route::get('/point-redemption-history', [HistoryController::class, 'pointRedemptionHistoryCostumer']);
 
     // Pickup Request
     Route::post('/pickup-requests', [TransactionController::class, 'createPickupRequest']);
 
     // Product Exchange
-    Route::post('/product-exchange', [ProductExchangeController::class, 'exchangeProduct'])->middleware('auth');
+    Route::post('/product-exchange', [ProductExchangeController::class, 'exchangeProduct']);
 
     // Waste Collection
     Route::post('/waste-collections', [WasteCollectionController::class, 'createWasteCollection']);
@@ -78,6 +78,10 @@ Route::middleware('auth:sanctum')->prefix('staff')->group(function () {
     Route::get('/waste-collections', [WasteCollectionController::class, 'index']);
     Route::put('/waste-collections/{id}/confirm', [WasteCollectionController::class, 'confirmWasteCollection']);
     Route::post('/waste-collections/{id}/submit', [WasteCollectionController::class, 'submitWasteCollection']);
+
+     // History
+     Route::get('/waste-collection-history', [HistoryController::class, 'wasteCollectionHistoryStaff']);
+     Route::get('/point-redemption-history', [HistoryController::class, 'pointRedemptionHistoryStaff']);
 
     // Nasabah
     Route::get('/list-nasabah', [NasabahController::class, 'index']);
