@@ -28,7 +28,7 @@ class HistoryController extends Controller
 
             $data = $wasteCollections->map(function($collection) {
                 return [
-                    'date' => $collection->collection_date->format('d M Y'),
+                    'date' => $collection->collection_date,
                     'description' => $collection->description,
                     'weight_total' => $collection->weight_total,
                     'point_total' => $collection->point_total,
