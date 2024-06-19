@@ -17,12 +17,12 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('user_id');
             $table->foreign('user_id')->references('id')->on('users');
-            $table->unsignedBigInteger('waste_id');
+            $table->unsignedBigInteger('waste_id')->nullable();
             $table->foreign('waste_id')->references('id')->on('wastes');
-            $table->float('weight_total');
-            $table->float('point_total');
+            $table->float('weight_total')->nullable();
+            $table->float('point_total')->nullable();
             $table->timestamp('collection_date');
-            $table->enum('confirmation_status', ['menunggu_konfirmasi', 'dikonfirmasi', 'batal'])->default('menunggu_konfirmasi');
+            $table->enum('confirmation_status', ['menunggu_konfirmasi', 'dikonfirmasi', 'berhasil'])->default('menunggu_konfirmasi');
             $table->string('created_by');
             $table->foreign('created_by')->references('id')->on('users');
             $table->timestamps();

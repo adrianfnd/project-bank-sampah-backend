@@ -11,7 +11,12 @@ class WasteCollection extends Model
 
     protected $table = 'waste_collections';
 
+    public $incrementing = false;
+
+    protected $keyType = 'string';
+
     protected $fillable = [
+        'id',
         'user_id',
         'waste_id',
         'weight_total',
@@ -23,7 +28,7 @@ class WasteCollection extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'users_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function waste()

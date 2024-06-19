@@ -9,6 +9,7 @@ use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\HistoryController;
 use App\Http\Controllers\API\ProductExchangeController;
 use App\Http\Controllers\API\NotificationController;
+use App\Http\Controllers\API\WasteCollectionController;
 use App\Http\Controllers\API\NasabahController;
 
 /*
@@ -57,7 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/product-exchange', [ProductExchangeController::class, 'exchangeProduct']);
 
     // Waste Collection
-    Route::post('/waste-collections', [WasteCollectionController::class, 'createWasteCollection']);
+    Route::post('/waste-collections/create', [WasteCollectionController::class, 'createWasteCollection']);
 
     // Notification
     Route::get('/list-notifications', [NotificationController::class, 'getCostomerNotifications']);
@@ -76,8 +77,8 @@ Route::middleware('auth:sanctum')->prefix('staff')->group(function () {
 
     // Waste Collection
     Route::get('/waste-collections', [WasteCollectionController::class, 'index']);
-    Route::put('/waste-collections/{id}/confirm', [WasteCollectionController::class, 'confirmWasteCollection']);
-    Route::post('/waste-collections/{id}/submit', [WasteCollectionController::class, 'submitWasteCollection']);
+    Route::put('/waste-collections/confirm/{id}', [WasteCollectionController::class, 'confirmWasteCollection']);
+    Route::post('/waste-collections/submit/{id}', [WasteCollectionController::class, 'submitWasteCollection']);
 
      // History
      Route::get('/waste-collection-history', [HistoryController::class, 'wasteCollectionHistoryStaff']);

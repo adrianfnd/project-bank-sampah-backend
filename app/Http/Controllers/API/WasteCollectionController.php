@@ -1,14 +1,16 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\API;
 
 use App\Models\Notification;
 use App\Models\User;
 use App\Models\WasteCollection;
 use App\Models\Waste;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class WasteCollectionController extends Controller
 {
@@ -53,11 +55,8 @@ class WasteCollectionController extends Controller
             }
 
             $validator = Validator::make($request->all(), [
-                'waste_id' => 'required|exists:wastes,id',
-                'weight_total' => 'required|numeric',
-                'point_total' => 'required|numeric',
-                'collection_date' => 'required|date',
                 'address' => 'required|string',
+                'date' => 'required|date',
             ]);
 
             if ($validator->fails()) {
@@ -68,30 +67,33 @@ class WasteCollectionController extends Controller
             }
 
             $wasteCollection = WasteCollection::create([
-                'user_id' => $validatedData['user_id'],
-                'weight_total' => $validatedData['weight_total'],
-                'point_total' => $validatedData['point_total'],
-                'collection_date' => $validatedData['collection_date'],
+                'id' => Str::uuid(),
+                'user_id' => $user->id,
+                'collection_date' => $request->collection_date,
                 'confirmation_status' => 'menunggu_konfirmasi',
-                'address' => $validatedData['address'],
-                'created_by' => auth()->id(),
+                'address' => $request->address,
+                'created_by' => $user->id,
             ]);
 
             $adminUser = User::whereHas('role', function ($query) {
-                $query->where('name', 'admin');
+                $query->where('name', 'staff');
             })->first();
 
             if ($adminUser) {
                 Notification::create([
                     'title' => 'Permintaan Penjemputan Sampah',
                     'user_id' => $adminUser->id,
-                    'description' => 'Ada permintaan penjemputan sampah dari ' . $wasteCollection->user->name . ' dengan alamat ' . $wasteCollection->address,
+                    'description' => 'Ada permintaan penjemputan sampah dari ' . $wasteCollection->user->name . ' dengan alamat ' . $wasteCollection->user->address,
                     'type' => 'penjemputan_sampah',
                     'status' => 'unread',
                 ]);
             }
 
-            return response()->json(['message' => 'Permintaan setor sampah berhasil dibuat'], 201);
+            return response()->json([
+                'success' => true,
+                'message' => 'Waste collection created successfully',
+                'data' => $wasteCollection
+            ], 201);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'An error occurred.',
@@ -112,7 +114,11 @@ class WasteCollectionController extends Controller
             $wasteCollection->confirmation_status = 'dikonfirmasi';
             $wasteCollection->save();
 
-            return response()->json(['message' => 'Penjemputan sampah berhasil dikonfirmasi']);
+            return response()->json([
+                'success' => true,
+                'message' => 'Waste collection confirmed successfully',
+                'data' => $wasteCollection
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'An error occurred.',
@@ -129,40 +135,56 @@ class WasteCollectionController extends Controller
                 'sampah_non_organik' => 'nullable|numeric',
                 'sampah_b3' => 'nullable|numeric',
             ]);
-
+    
             if ($validator->fails()) {
                 return response()->json([
                     'message' => 'Validation error',
                     'errors' => $validator->errors(),
                 ], 400);
             }
-
+    
             $validatedData = $validator->validated();
-
+    
             $wasteCollection = WasteCollection::find($id);
-
+    
             if (!$wasteCollection) {
                 return response()->json(['message' => 'Waste Collection not found.'], 404);
             }
-
+    
             $wasteCollection->confirmation_status = 'berhasil';
             $wasteCollection->save();
-
+    
+            // Create new Waste entries and associate them with the WasteCollection
             if (isset($validatedData['sampah_organik'])) {
-                $organicWaste = Waste::where('category', 'organik')->first();
+                $organicWaste = Waste::create([
+                    'name' => 'Organic Waste',
+                    'category' => 'organic',
+                    'weight' => $validatedData['sampah_organik'],
+                    'point' => $this->calculatePoints($validatedData['sampah_organik']), // Assuming you have a method to calculate points
+                ]);
                 $wasteCollection->waste()->attach($organicWaste->id, ['weight' => $validatedData['sampah_organik']]);
             }
-
+    
             if (isset($validatedData['sampah_non_organik'])) {
-                $nonOrganicWaste = Waste::where('category', 'non_organik')->first();
+                $nonOrganicWaste = Waste::create([
+                    'name' => 'Non-Organic Waste',
+                    'category' => 'non_organic',
+                    'weight' => $validatedData['sampah_non_organik'],
+                    'point' => $this->calculatePoints($validatedData['sampah_non_organik']),
+                ]);
                 $wasteCollection->waste()->attach($nonOrganicWaste->id, ['weight' => $validatedData['sampah_non_organik']]);
             }
-
+    
             if (isset($validatedData['sampah_b3'])) {
-                $b3Waste = Waste::where('category', 'b3')->first();
+                $b3Waste = Waste::create([
+                    'name' => 'B3 Waste',
+                    'category' => 'b3',
+                    'weight' => $validatedData['sampah_b3'],
+                    'point' => $this->calculatePoints($validatedData['sampah_b3']),
+                ]);
                 $wasteCollection->waste()->attach($b3Waste->id, ['weight' => $validatedData['sampah_b3']]);
             }
-
+    
             $notification = Notification::create([
                 'title' => 'Penjemputan Sampah Berhasil',
                 'user_id' => $wasteCollection->user_id,
@@ -170,7 +192,7 @@ class WasteCollectionController extends Controller
                 'type' => 'penjemputan_sampah',
                 'status' => 'unread',
             ]);
-
+    
             return response()->json(['message' => 'Waste Collection submitted successfully.'], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -178,6 +200,12 @@ class WasteCollectionController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+    
+    private function calculatePoints($weight)
+    {
+        // Implement your point calculation logic here
+        return $weight * 10; // Example calculation
     }
 
 }
