@@ -20,10 +20,11 @@ class WasteCollectionsSeeder extends Seeder
             $collections[] = [
                 'id' => Str::uuid(),
                 'user_id' => DB::table('users')->inRandomOrder()->first()->id,
-                'waste_id' => DB::table('wastes')->inRandomOrder()->first()->id,
                 'weight_total' => rand(1, 10),
                 'point_total' => $amount,
+                'address' => Str::random(10),
                 'collection_date' => now(),
+                'confirmation_status' => 'berhasil',
                 'created_by' => DB::table('users')->inRandomOrder()->first()->id,
                 'created_at' => now(),
                 'updated_at' => now()

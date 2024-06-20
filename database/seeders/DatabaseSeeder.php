@@ -22,9 +22,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UsersSeeder::class,
             XenditLogsSeeder::class,
-            WastesSeeder::class,
             WasteBanksSeeder::class,
             WasteCollectionsSeeder::class,
+            WastesSeeder::class,
             TransactionsSeeder::class,
             ProductsSeeder::class,
             ProductExchangesSeeder::class,

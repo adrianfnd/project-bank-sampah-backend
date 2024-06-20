@@ -19,6 +19,8 @@ return new class extends Migration
             $table->enum('category', ['organic', 'non_organic', 'b3']);
             $table->float('weight');
             $table->float('point');
+            $table->string('waste_collection_id')->nullable();
+            $table->foreign('waste_collection_id')->references('id')->on('waste_collections');
             $table->timestamps();
         });
     }

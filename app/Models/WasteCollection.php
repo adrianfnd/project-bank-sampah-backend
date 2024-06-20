@@ -18,9 +18,9 @@ class WasteCollection extends Model
     protected $fillable = [
         'id',
         'user_id',
-        'waste_id',
         'weight_total',
         'point_total',
+        'address',
         'collection_date',
         'confirmation_status',
         'created_by',
@@ -29,11 +29,6 @@ class WasteCollection extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
-    }
-
-    public function waste()
-    {
-        return $this->belongsTo(Waste::class);
     }
 
     public function createdByUser()

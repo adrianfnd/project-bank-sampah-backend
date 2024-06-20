@@ -153,14 +153,13 @@ class WasteCollectionController extends Controller
     
             $wasteCollection->confirmation_status = 'berhasil';
             $wasteCollection->save();
-    
-            // Create new Waste entries and associate them with the WasteCollection
+
             if (isset($validatedData['sampah_organik'])) {
                 $organicWaste = Waste::create([
                     'name' => 'Organic Waste',
                     'category' => 'organic',
                     'weight' => $validatedData['sampah_organik'],
-                    'point' => $this->calculatePoints($validatedData['sampah_organik']), // Assuming you have a method to calculate points
+                    'point' => $this->calculatePoints($validatedData['sampah_organik']),
                 ]);
                 $wasteCollection->waste()->attach($organicWaste->id, ['weight' => $validatedData['sampah_organik']]);
             }

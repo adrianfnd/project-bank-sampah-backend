@@ -23,6 +23,7 @@ class WastesSeeder extends Seeder
                 'category' => ['organic', 'non_organic', 'b3'][array_rand(['organic', 'non_organic', 'b3'])],
                 'weight' => rand(1, 10),
                 'point' => $amount,
+                'waste_collection_id' => DB::table('waste_collections')->inRandomOrder()->first()->id,
                 'created_at' => now(),
                 'updated_at' => now()
             ];

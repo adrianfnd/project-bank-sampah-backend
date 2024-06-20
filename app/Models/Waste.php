@@ -14,10 +14,11 @@ class Waste extends Model
         'category',
         'weight',
         'point',
+        'waste_collection_id',
     ];
 
     public function wasteCollections()
     {
-        return $this->hasMany(WasteCollection::class);
+        return $this->belongsTo(WasteCollection::class, 'waste_collection_id');
     }
 }
