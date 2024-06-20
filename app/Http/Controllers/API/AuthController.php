@@ -236,7 +236,7 @@ class AuthController extends Controller
         $otp = rand(100000, 999999);
         $user->update(['otp' => $otp]);
 
-        // Mail::to($user->email)->send(new OTPMail($otp));
+        Mail::to($user->email)->send(new OTPMail($otp));
 
         return response()->json([
             'success' => true,

@@ -5,10 +5,13 @@ namespace App\Http\Controllers\API;
 use App\Models\WasteCollection;
 use App\Models\Waste;
 use App\Models\Transaction;
+use App\Models\Product;
+use App\Models\ProductExchange;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class HistoryController extends Controller
 {
@@ -74,33 +77,32 @@ class HistoryController extends Controller
     }
     
     
-
     public function pointRedemptionHistoryCostumer(Request $request)
     {
         try {
             $user = Auth::user();
-
+    
             if (!$user) {
                 return response()->json([
                     'message' => 'Unauthorized',
                 ], 401);
             }
-
+    
             $validator = Validator::make($request->all(), [
                 'month' => 'required|integer|min:1|max:12',
                 'year' => 'required|integer|min:1900|max:' . date('Y'),
             ]);
-
+    
             if ($validator->fails()) {
                 return response()->json([
                     'message' => 'Validation error',
                     'errors' => $validator->errors(),
                 ], 400);
             }
-
+    
             $month = $request->input('month');
             $year = $request->input('year');
-
+    
             $transactions = Transaction::where('user_id', $user->id)
                 ->whereMonth('created_at', $month)
                 ->whereYear('created_at', $year)
@@ -109,10 +111,10 @@ class HistoryController extends Controller
                 ->with(['ppobPayment', 'xenditLog'])
                 ->get();
 
-            $data = $transactions->map(function($transaction) {
+            $transactionData = $transactions->map(function ($transaction) {
                 return [
                     'date' => $transaction->created_at->format('d M Y'),
-                    'type' => $transaction->transaction_type,
+                    'type' => 'pembayaran_tagihan',
                     'total_balance_involved' => $transaction->total_balance_involved,
                     'status' => 'Berhasil',
                     'ppob_payment' => $transaction->ppobPayment ? [
@@ -125,18 +127,61 @@ class HistoryController extends Controller
                     ] : null,
                 ];
             });
-
+    
+            $productExchanges = DB::table('product_exchanges')
+                ->select(
+                    'user_id',
+                    'exchange_date',
+                    'created_by',
+                    DB::raw('SUM(total_points) as total_points'),
+                    DB::raw('GROUP_CONCAT(product_id) as product_ids'),
+                    DB::raw('GROUP_CONCAT(quantity) as quantities')
+                )
+                ->where('user_id', $user->id)
+                ->whereMonth('exchange_date', $month)
+                ->whereYear('exchange_date', $year)
+                ->groupBy('user_id', 'exchange_date', 'created_by')
+                ->orderBy('exchange_date', 'desc')
+                ->get();
+    
+            $productExchangeData = $productExchanges->map(function ($exchange) {
+                $productIds = explode(',', $exchange->product_ids);
+                $quantities = explode(',', $exchange->quantities);
+    
+                $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
+    
+                $exchangeDetails = [];
+                foreach ($productIds as $index => $productId) {
+                    $exchangeDetails[] = [
+                        'product_id' => $productId,
+                        'product_name' => $products[$productId]->name ?? 'Unknown',
+                        'quantity' => $quantities[$index],
+                        'total_points' => $exchange->total_points,
+                    ];
+                }
+    
+                return [
+                    'date' => (new \DateTime($exchange->exchange_date))->format('d M Y'),
+                    'type' => 'penukaran_produk',
+                    'total_balance_involved' => $exchange->total_points,
+                    'status' => 'Berhasil',
+                    'product_exchange' => $exchangeDetails,
+                ];
+            });
+    
+            $mergedData = $transactionData->merge($productExchangeData)->sortByDesc('date')->values()->all();
+    
             return response()->json([
-                'data' => $data,
+                'data' => $mergedData,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-      'message' => 'An error occurred.',
+                'message' => 'An error occurred.',
                 'error' => $e->getMessage(),
             ], 500);
         }
     }
-   
+    
     public function wasteCollectionHistoryStaff()
     {
         try {
@@ -192,13 +237,13 @@ class HistoryController extends Controller
 
             $transactions = Transaction::where('transaction_type', 'pembayaran_tagihan')
                 ->orderBy('created_at', 'desc')
-                ->with(['ppobPayment','xenditLog'])
+                ->with(['ppobPayment', 'xenditLog'])
                 ->get();
 
-            $data = $transactions->map(function($transaction) {
+            $transactionData = $transactions->map(function ($transaction) {
                 return [
                     'date' => $transaction->created_at->format('d M Y'),
-                    'type' => $transaction->transaction_type,
+                    'type' => 'pembayaran_tagihan',
                     'total_balance_involved' => $transaction->total_balance_involved,
                     'status' => 'Berhasil',
                     'ppob_payment' => $transaction->ppobPayment ? [
@@ -212,8 +257,48 @@ class HistoryController extends Controller
                 ];
             });
 
+            $productExchanges = DB::table('product_exchanges')
+                ->select(
+                    'user_id',
+                    'exchange_date',
+                    'created_by',
+                    DB::raw('SUM(total_points) as total_points'),
+                    DB::raw('GROUP_CONCAT(product_id) as product_ids'),
+                    DB::raw('GROUP_CONCAT(quantity) as quantities')
+                )
+                ->groupBy('user_id', 'exchange_date', 'created_by')
+                ->orderBy('exchange_date', 'desc')
+                ->get();
+
+            $productExchangeData = $productExchanges->map(function ($exchange) {
+                $productIds = explode(',', $exchange->product_ids);
+                $quantities = explode(',', $exchange->quantities);
+
+                $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
+
+                $exchangeDetails = [];
+                foreach ($productIds as $index => $productId) {
+                    $exchangeDetails[] = [
+                        'product_id' => $productId,
+                        'product_name' => $products[$productId]->name ?? 'Unknown',
+                        'quantity' => $quantities[$index],
+                        'total_points' => $exchange->total_points,
+                    ];
+                }
+
+                return [
+                    'date' => (new \DateTime($exchange->exchange_date))->format('d M Y'),
+                    'type' => 'penukaran_produk',
+                    'total_balance_involved' => $exchange->total_points,
+                    'status' => 'Berhasil',
+                    'product_exchange' => $exchangeDetails,
+                ];
+            });
+
+            $mergedData = $transactionData->merge($productExchangeData)->sortByDesc('date')->values()->all();
+
             return response()->json([
-                'data' => $data,
+                'data' => $mergedData,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
