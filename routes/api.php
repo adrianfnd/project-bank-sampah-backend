@@ -80,9 +80,10 @@ Route::middleware('auth:sanctum')->prefix('staff')->group(function () {
     Route::put('/waste-collections/confirm/{id}', [WasteCollectionController::class, 'confirmWasteCollection']);
     Route::post('/waste-collections/submit/{id}', [WasteCollectionController::class, 'submitWasteCollection']);
 
-     // History
-     Route::get('/waste-collection-history', [HistoryController::class, 'wasteCollectionHistoryStaff']);
-     Route::get('/point-redemption-history', [HistoryController::class, 'pointRedemptionHistoryStaff']);
+    // History
+    Route::get('/waste-collection-history', [HistoryController::class, 'wasteCollectionHistoryStaff']);
+    Route::get('/point-redemption-history', [HistoryController::class, 'pointRedemptionHistoryStaff']);
+    Route::post('/waste-collections/submit', [WasteCollectionController::class, 'submitWasteCollectionManual']);
 
     // Nasabah
     Route::get('/list-nasabah', [NasabahController::class, 'index']);

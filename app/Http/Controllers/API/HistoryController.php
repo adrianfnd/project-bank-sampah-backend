@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\WasteCollection;
+use App\Models\Waste;
 use App\Models\Transaction;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -15,51 +16,52 @@ class HistoryController extends Controller
     {
         try {
             $user = Auth::user();
-
+    
             if (!$user) {
                 return response()->json([
                     'message' => 'Unauthorized',
                 ], 401);
             }
-
+    
             $validator = Validator::make($request->all(), [
                 'month' => 'required|integer|min:1|max:12',
                 'year' => 'required|integer|min:1900|max:' . date('Y'),
             ]);
-
+    
             if ($validator->fails()) {
                 return response()->json([
                     'message' => 'Validation error',
                     'errors' => $validator->errors(),
                 ], 400);
             }
-
+    
             $month = $request->input('month');
             $year = $request->input('year');
-
+    
             $wasteCollections = WasteCollection::where('user_id', $user->id)
                 ->whereMonth('collection_date', $month)
                 ->whereYear('collection_date', $year)
-                ->with(['waste'])
                 ->orderBy('collection_date', 'desc')
                 ->get();
-
+    
             $data = $wasteCollections->map(function($collection) {
+                $wastes = Waste::where('waste_collection_id', $collection->id)->get();
+                
                 return [
                     'date' => $collection->collection_date,
                     'description' => $collection->description,
-                    'weight_total' => $collection->weight_total,
-                    'point_total' => $collection->point_total,
+                    'weight_total' => $wastes->sum('weight'),
+                    'point_total' => $wastes->sum('point'),
                     'confirmation_status' => ucwords(str_replace('_', ' ', $collection->confirmation_status)),
                     'details' => [
-                        'Organic' => $collection->waste->where('category', 'Organic')->sum('weight'),
-                        'Non Organic' => $collection->waste->where('category', 'Non-Organic')->sum('weight'),
-                        'B3' => $collection->waste->where('category', 'B3')->sum('weight'),
-                        'Other' => $collection->waste->whereNotIn('category', ['Organic', 'Non-Organic', 'B3'])->sum('weight'),
+                        'Organic' => $wastes->where('category', 'organic')->sum('weight'),
+                        'Non Organic' => $wastes->where('category', 'non_organic')->sum('weight'),
+                        'B3' => $wastes->where('category', 'b3')->sum('weight'),
+                        'Other' => $wastes->whereNotIn('category', ['organic', 'non_organic', 'b3'])->sum('weight'),
                     ],
                 ];
             });
-
+    
             return response()->json([
                 'data' => $data,
             ], 200);
@@ -70,6 +72,8 @@ class HistoryController extends Controller
             ], 500);
         }
     }
+    
+    
 
     public function pointRedemptionHistoryCostumer(Request $request)
     {
@@ -137,32 +141,33 @@ class HistoryController extends Controller
     {
         try {
             $user = Auth::user();
-
+    
             if (!$user) {
                 return response()->json([
                     'message' => 'Unauthorized',
                 ], 401);
             }
-
-            $wasteCollections = WasteCollection::with(['waste'])
-                ->orderBy('collection_date', 'desc')
-                ->get();
-
+    
+            $wasteCollections = WasteCollection::orderBy('collection_date', 'desc')->get();
+    
             $data = $wasteCollections->map(function($collection) {
+                $wastes = Waste::where('waste_collection_id', $collection->id)->get();
+                
                 return [
                     'date' => $collection->collection_date,
                     'description' => $collection->description,
-                    'weight_total' => $collection->weight_total,
-                    'point_total' => $collection->point_total,
+                    'weight_total' => $wastes->sum('weight'),
+                    'point_total' => $wastes->sum('point'),
+                    'confirmation_status' => ucwords(str_replace('_', ' ', $collection->confirmation_status)),
                     'details' => [
-                        'Organic' => $collection->waste->where('category', 'Organic')->sum('weight'),
-                        'Non Organic' => $collection->waste->where('category', 'Non-Organic')->sum('weight'),
-                        'B3' => $collection->waste->where('category', 'B3')->sum('weight'),
-                        'Other' => $collection->waste->whereNotIn('category', ['Organic', 'Non-Organic', 'B3'])->sum('weight'),
+                        'Organic' => $wastes->where('category', 'organic')->sum('weight'),
+                        'Non Organic' => $wastes->where('category', 'non_organic')->sum('weight'),
+                        'B3' => $wastes->where('category', 'b3')->sum('weight'),
+                        'Other' => $wastes->whereNotIn('category', ['organic', 'non_organic', 'b3'])->sum('weight'),
                     ],
                 ];
             });
-
+    
             return response()->json([
                 'data' => $data,
             ], 200);

@@ -15,7 +15,8 @@ return new class extends Migration
     {
         Schema::create('waste_collections', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('user_id');
+            $table->string('name')->nullable();
+            $table->string('user_id')->nullable();
             $table->foreign('user_id')->references('id')->on('users');
             $table->float('weight_total')->nullable();
             $table->float('point_total')->nullable();
