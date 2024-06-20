@@ -29,6 +29,7 @@ class WasteCollectionController extends Controller
                         'id' => $collection->id,
                         'user' => $collection->user->name,
                         'address' => $collection->address,
+                        'date' => $collection->collection_date,
                         'confirmation_status' =>  ucwords(str_replace('_', ' ', $collection->confirmation_status)),
                     ];
                 });

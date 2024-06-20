@@ -46,6 +46,10 @@ class ProductExchangeController extends Controller
                 return response()->json(['error' => 'Invalid product ID: ' . $productId], 400);
             }
 
+            if ($product->stock < $quantities[$index]) {
+                return response()->json(['error' => 'Insufficient stock for product ID: ' . $productId], 400);
+            }
+
             $quantity = $quantities[$index] ?? 1;
             $totalPoints += $product->point_cost * $quantity;
         }
