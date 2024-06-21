@@ -39,6 +39,7 @@ class UserController extends Controller
             $profileData['image_url'] = url(Storage::url('images/users/'.$user->image));
         }
     
+        $profileData['current_point'] = $user->current_point;
         $profileData['created_at'] = $user->created_at;
         $profileData['updated_at'] = $user->updated_at;
     
@@ -117,6 +118,7 @@ class UserController extends Controller
                 'email' => $user->email,
                 'phone_number' => $user->phone_number,
                 'image_url' => $user->image ? url(Storage::url('images/users/'.$user->image)) : null,
+                'current_point' => $user->current_point,
                 'created_at' => $user->created_at,
                 'updated_at' => $user->updated_at,
             ],

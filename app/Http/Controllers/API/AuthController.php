@@ -76,9 +76,13 @@ class AuthController extends Controller
             ], 400);
         }
     
-        $user = User::where('email', $request->email)
-                    ->orWhere('phone_number', $request->phone_number)
-                    ->first();
+        if ($request->email !== null) {
+            $user = User::where('email', $request->email)
+                        ->first();
+        } elseif ($request->phone_number !== null) {
+            $user = User::where('phone_number', $request->phone_number)
+                        ->first();
+        }
     
         if (!$user) {
             return response()->json([
