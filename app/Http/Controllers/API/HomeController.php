@@ -15,58 +15,73 @@ class HomeController extends Controller
     {
         try {
             $user = Auth::user();
-
+    
             if (!$user) {
                 return response()->json([
                     'message' => 'Unauthorized',
                 ], 401);
             }
-
+    
             $validator = Validator::make($request->all(), [
                 'month' => 'required|integer|min:1|max:12',
                 'year' => 'required|integer|min:1900|max:' . date('Y'),
             ]);
-
+    
             if ($validator->fails()) {
                 return response()->json([
                     'message' => 'Validation error',
                     'errors' => $validator->errors(),
                 ], 400);
             }
-
+    
             $month = $request->query('month');
             $year = $request->query('year');
-
+    
             $query = WasteCollection::where('user_id', $user->id)
                 ->whereMonth('collection_date', $month)
                 ->whereYear('collection_date', $year);
-
-            $organik = (clone $query)->whereHas('waste', function ($query) {
+    
+            $organik = $query->with(['waste' => function ($query) {
                     $query->where('category', 'Organic');
+                }])
+                ->get()
+                ->map(function($collection) {
+                    return [
+                        'waste_weight' => $collection->waste->sum('weight'),
+                        'collection_date' => $collection->collection_date,
+                    ];
                 })
-                ->select('weight_total as waste_weight', 'collection_date')
-                ->orderBy('collection_date', 'desc')
                 ->first();
-
-            $nonOrganic = (clone $query)->whereHas('waste', function ($query) {
+    
+            $nonOrganic = $query->with(['waste' => function ($query) {
                     $query->where('category', 'Non-Organic');
+                }])
+                ->get()
+                ->map(function($collection) {
+                    return [
+                        'waste_weight' => $collection->waste->sum('weight'),
+                        'collection_date' => $collection->collection_date,
+                    ];
                 })
-                ->select('weight_total as waste_weight', 'collection_date')
-                ->orderBy('collection_date', 'desc')
                 ->first();
-
-            $b3 = (clone $query)->whereHas('waste', function ($query) {
+    
+            $b3 = $query->with(['waste' => function ($query) {
                     $query->where('category', 'B3');
+                }])
+                ->get()
+                ->map(function($collection) {
+                    return [
+                        'waste_weight' => $collection->waste->sum('weight'),
+                        'collection_date' => $collection->collection_date,
+                    ];
                 })
-                ->select('weight_total as waste_weight', 'collection_date')
-                ->orderBy('collection_date', 'desc')
                 ->first();
-
+    
             $totalPoint = WasteCollection::where('user_id', $user->id)
                 ->whereMonth('collection_date', $month)
                 ->whereYear('collection_date', $year)
                 ->sum('point_total');
-
+    
             return response()->json([
                 'data' => [
                     'total_point' => $totalPoint,
@@ -84,6 +99,7 @@ class HomeController extends Controller
             ], 500);
         }
     }
+    
 
     public function wasteBank() 
     {
@@ -99,7 +115,7 @@ class HomeController extends Controller
             $wasteBank = WasteBank::where('user_id', $user->id)->first();
 
             return response()->json([
-                'waste_bank' => $wasteBank->name
+                'waste_bank' => $wasteBank->name ?? 'Bank Sampah Desa Sindangpanon'
             ], 200);
         } catch (\Exception $e) {
             return response()->json([

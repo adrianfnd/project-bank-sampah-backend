@@ -18,23 +18,25 @@ class WasteCollectionController extends Controller
     {
         try {
             $wasteCollections = WasteCollection::with('user')
+                ->orderBy('created_at', 'desc')
                 ->get()
                 ->groupBy('confirmation_status');
-
+    
             $data = [];
-
+    
             foreach ($wasteCollections as $status => $collections) {
-                $data[$status] = $collections->map(function ($collection) {
+                $sortedCollections = $collections->sortByDesc('created_at');
+                $data[$status] = $sortedCollections->map(function ($collection) {
                     return [
                         'id' => $collection->id,
                         'user' => $collection->user->name,
                         'address' => $collection->address,
                         'date' => $collection->collection_date,
-                        'confirmation_status' =>  ucwords(str_replace('_', ' ', $collection->confirmation_status)),
+                        'confirmation_status' => ucwords(str_replace('_', ' ', $collection->confirmation_status)),
                     ];
-                });
+                })->values();
             }
-
+    
             return response()->json($data);
         } catch (\Exception $e) {
             return response()->json([
@@ -42,7 +44,7 @@ class WasteCollectionController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
-    }
+    }    
 
     public function createWasteCollection(Request $request)
     {
@@ -71,7 +73,7 @@ class WasteCollectionController extends Controller
                 'id' => Str::uuid(),
                 'user_id' => $user->id,
                 'name' => $user->name,
-                'collection_date' => $request->collection_date,
+                'collection_date' => $request->date,
                 'confirmation_status' => 'menunggu_konfirmasi',
                 'address' => $request->address,
                 'created_by' => $user->id,

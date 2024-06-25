@@ -66,11 +66,11 @@ class UserController extends Controller
         ];
 
         if ($user->email !== null) {
-            $rules['email'] = 'required|string|email|max:255|unique:users,email,' . $user->id;
+            $rules['email'] = 'nullable|string|email|max:255|unique:users,email,' . $user->id;
         }
 
         if ($user->phone_number !== null) {
-            $rules['phone_number'] = 'required|string|max:15|unique:users,phone_number,' . $user->id;
+            $rules['phone_number'] = 'nullable|string|max:15|unique:users,phone_number,' . $user->id;
         }
 
         $validator = Validator::make($request->all(), $rules);
