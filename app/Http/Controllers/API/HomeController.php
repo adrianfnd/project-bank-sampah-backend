@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Models\WasteCollection;
 use App\Models\WasteBank;
+use App\Models\Waste;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -36,47 +37,73 @@ class HomeController extends Controller
     
             $month = $request->query('month');
             $year = $request->query('year');
-    
-            $query = WasteCollection::where('user_id', $user->id)
+
+            $organik = WasteCollection::where('user_id', $user->id)
                 ->whereMonth('collection_date', $month)
-                ->whereYear('collection_date', $year);
-    
-            $organik = $query->with(['waste' => function ($query) {
-                    $query->where('category', 'Organic');
+                ->whereYear('collection_date', $year)
+                ->with(['waste' => function ($query) {
+                    $query->where('category', 'organic');
                 }])
                 ->get()
-                ->map(function($collection) {
+                ->map(function ($collection) {
+                    $totalWeight = Waste::where('waste_collection_id', $collection->id)
+                        ->where('category', 'organic')
+                        ->sum('weight');
+                    $totalPoint = Waste::where('waste_collection_id', $collection->id)
+                        ->where('category', 'organic')
+                        ->sum('point');
                     return [
-                        'waste_weight' => $collection->waste->sum('weight'),
+                        'waste_weight' => $totalWeight,
+                        'waste_point' => $totalPoint,
                         'collection_date' => $collection->collection_date,
                     ];
                 })
                 ->first();
-    
-            $nonOrganic = $query->with(['waste' => function ($query) {
-                    $query->where('category', 'Non-Organic');
+
+            $nonOrganic = WasteCollection::where('user_id', $user->id)
+                ->whereMonth('collection_date', $month)
+                ->whereYear('collection_date', $year)
+                ->with(['waste' => function ($query) {
+                    $query->where('category', 'non_organic');
                 }])
                 ->get()
-                ->map(function($collection) {
+                ->map(function ($collection) {
+                    $totalWeight = Waste::where('waste_collection_id', $collection->id)
+                        ->where('category', 'non_organic')
+                        ->sum('weight');
+                    $totalPoint = Waste::where('waste_collection_id', $collection->id)
+                        ->where('category', 'non_organic')
+                        ->sum('point');
                     return [
-                        'waste_weight' => $collection->waste->sum('weight'),
+                        'waste_weight' => $totalWeight,
+                        'waste_point' => $totalPoint,
                         'collection_date' => $collection->collection_date,
                     ];
                 })
                 ->first();
-    
-            $b3 = $query->with(['waste' => function ($query) {
-                    $query->where('category', 'B3');
+
+            $b3 = WasteCollection::where('user_id', $user->id)
+                ->whereMonth('collection_date', $month)
+                ->whereYear('collection_date', $year)
+                ->with(['waste' => function ($query) {
+                    $query->where('category', 'b3');
                 }])
                 ->get()
-                ->map(function($collection) {
+                ->map(function ($collection) {
+                    $totalWeight = Waste::where('waste_collection_id', $collection->id)
+                        ->where('category', 'b3')
+                        ->sum('weight');
+                    $totalPoint = Waste::where('waste_collection_id', $collection->id)
+                        ->where('category', 'b3')
+                        ->sum('point');
                     return [
-                        'waste_weight' => $collection->waste->sum('weight'),
+                        'waste_weight' => $totalWeight,
+                        'waste_point' => $totalPoint,
                         'collection_date' => $collection->collection_date,
                     ];
                 })
                 ->first();
-    
+
             $totalPoint = WasteCollection::where('user_id', $user->id)
                 ->whereMonth('collection_date', $month)
                 ->whereYear('collection_date', $year)
@@ -100,7 +127,6 @@ class HomeController extends Controller
         }
     }
     
-
     public function wasteBank() 
     {
         try {
