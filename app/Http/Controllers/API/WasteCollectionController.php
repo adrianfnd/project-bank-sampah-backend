@@ -69,11 +69,13 @@ class WasteCollectionController extends Controller
                 ], 400);
             }
 
+            $collectionDate = date('Y-m-d H:i:s', strtotime($request->date));
+
             $wasteCollection = WasteCollection::create([
                 'id' => Str::uuid(),
                 'user_id' => $user->id,
                 'name' => $user->name,
-                'collection_date' => $request->date,
+                'collection_date' => $collectionDate,
                 'confirmation_status' => 'menunggu_konfirmasi',
                 'address' => $request->address,
                 'created_by' => $user->id,

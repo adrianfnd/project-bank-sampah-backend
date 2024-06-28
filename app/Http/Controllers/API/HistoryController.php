@@ -110,7 +110,7 @@ class HistoryController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->with(['ppobPayment', 'xenditLog'])
                 ->get();
-
+    
             $transactionData = $transactions->map(function ($transaction) {
                 return [
                     'date' => $transaction->created_at->format('d M Y'),
@@ -128,20 +128,9 @@ class HistoryController extends Controller
                 ];
             });
     
-            $productExchanges = DB::table('product_exchanges')
-                ->select(
-                    'user_id',
-                    'exchange_date',
-                    'created_by',
-                    DB::raw('SUM(total_points) as total_points'),
-                    DB::raw('GROUP_CONCAT(product_id) as product_ids'),
-                    DB::raw('GROUP_CONCAT(quantity) as quantities')
-                )
-                ->where('user_id', $user->id)
+            $productExchanges = ProductExchange::where('user_id', $user->id)
                 ->whereMonth('exchange_date', $month)
                 ->whereYear('exchange_date', $year)
-                ->groupBy('user_id', 'exchange_date', 'created_by')
-                ->orderBy('exchange_date', 'desc')
                 ->get();
     
             $productExchangeData = $productExchanges->map(function ($exchange) {
@@ -169,7 +158,7 @@ class HistoryController extends Controller
                 ];
             });
     
-            $mergedData = $transactionData->merge($productExchangeData)->sortByDesc('date')->values()->all();
+            $mergedData = $transactionData->concat($productExchangeData)->sortByDesc('date')->values()->all();
     
             return response()->json([
                 'data' => $mergedData,
@@ -180,7 +169,7 @@ class HistoryController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
-    }
+    }    
     
     public function wasteCollectionHistoryStaff()
     {
