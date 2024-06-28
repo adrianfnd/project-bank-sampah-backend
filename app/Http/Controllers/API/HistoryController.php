@@ -110,7 +110,7 @@ class HistoryController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->with(['ppobPayment', 'xenditLog'])
                 ->get();
-
+    
             $transactionData = $transactions->map(function ($transaction) {
                 return [
                     'date' => $transaction->created_at->format('d M Y'),
@@ -169,7 +169,7 @@ class HistoryController extends Controller
                 ];
             });
     
-            $mergedData = $transactionData->merge($productExchangeData)->sortByDesc('date')->values()->all();
+            $mergedData = collect($transactionData)->merge($productExchangeData)->sortByDesc('date')->values()->all();
     
             return response()->json([
                 'data' => $mergedData,
@@ -228,18 +228,18 @@ class HistoryController extends Controller
     {
         try {
             $user = Auth::user();
-
+    
             if (!$user) {
                 return response()->json([
                     'message' => 'Unauthorized',
                 ], 401);
             }
-
+    
             $transactions = Transaction::where('transaction_type', 'pembayaran_tagihan')
                 ->orderBy('created_at', 'desc')
                 ->with(['ppobPayment', 'xenditLog'])
                 ->get();
-
+    
             $transactionData = $transactions->map(function ($transaction) {
                 return [
                     'date' => $transaction->created_at->format('d M Y'),
@@ -256,7 +256,7 @@ class HistoryController extends Controller
                     ] : null,
                 ];
             });
-
+    
             $productExchanges = DB::table('product_exchanges')
                 ->select(
                     'user_id',
@@ -269,13 +269,13 @@ class HistoryController extends Controller
                 ->groupBy('user_id', 'exchange_date', 'created_by')
                 ->orderBy('exchange_date', 'desc')
                 ->get();
-
+    
             $productExchangeData = $productExchanges->map(function ($exchange) {
                 $productIds = explode(',', $exchange->product_ids);
                 $quantities = explode(',', $exchange->quantities);
-
+    
                 $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
-
+    
                 $exchangeDetails = [];
                 foreach ($productIds as $index => $productId) {
                     $exchangeDetails[] = [
@@ -285,7 +285,7 @@ class HistoryController extends Controller
                         'total_points' => $exchange->total_points,
                     ];
                 }
-
+    
                 return [
                     'date' => (new \DateTime($exchange->exchange_date))->format('d M Y'),
                     'type' => 'penukaran_produk',
@@ -294,9 +294,9 @@ class HistoryController extends Controller
                     'product_exchange' => $exchangeDetails,
                 ];
             });
-
-            $mergedData = $transactionData->merge($productExchangeData)->sortByDesc('date')->values()->all();
-
+    
+            $mergedData = collect($transactionData)->merge($productExchangeData)->sortByDesc('date')->values()->all();
+    
             return response()->json([
                 'data' => $mergedData,
             ], 200);

@@ -96,7 +96,7 @@ Route::middleware('auth:sanctum')->prefix('staff')->group(function () {
 
     // Notification
     Route::get('/list-notifications', [NotificationController::class, 'getStaffNotifications']);
-    Route::post('/read-notifications', [NotificationController::class, 'markAsReadNotifications']);
+    Route::get('/read-notifications/{id}', [NotificationController::class, 'markAsReadNotifications']);
 
     // FAQ
     Route::get('faqs', [FaqController::class, 'index']);

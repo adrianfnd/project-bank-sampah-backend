@@ -62,6 +62,10 @@ class NotificationController extends Controller
                 ], 401);
             }
 
+            $staffUsers = User::whereHas('role', function ($query) {
+                $query->where('name', 'staff');
+            })->pluck('id');
+
             $notifications = Notification::where('user_id', $staffUsers)
                 ->get()
                 ->map(function ($notification) {

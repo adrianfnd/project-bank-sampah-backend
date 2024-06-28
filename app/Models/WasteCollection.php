@@ -34,7 +34,7 @@ class WasteCollection extends Model
 
     public function waste()
     {
-        return $this->belongsTo(Waste::class);
+        return $this->belongsTo(Waste::class, 'id', 'waste_collection_id');
     }
 
     public function createdByUser()
