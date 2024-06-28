@@ -11,6 +11,7 @@ use App\Http\Controllers\API\ProductExchangeController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\WasteCollectionController;
 use App\Http\Controllers\API\NasabahController;
+use App\Http\Controllers\API\FaqController;
 
 /*
 |--------------------------------------------------------------------------
@@ -62,6 +63,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Notification
     Route::get('/list-notifications', [NotificationController::class, 'getCostomerNotifications']);
+    Route::get('/read-notifications/{id}', [NotificationController::class, 'markAsReadNotifications']);
+
+    // FAQ
+    Route::get('faqs', [FaqController::class, 'index']);
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -91,6 +96,14 @@ Route::middleware('auth:sanctum')->prefix('staff')->group(function () {
 
     // Notification
     Route::get('/list-notifications', [NotificationController::class, 'getStaffNotifications']);
+    Route::post('/read-notifications', [NotificationController::class, 'markAsReadNotifications']);
+
+    // FAQ
+    Route::get('faqs', [FaqController::class, 'index']);
+    Route::get('faqs/{id}', [FaqController::class, 'show']);
+    Route::post('faqs', [FaqController::class, 'store']);
+    Route::put('faqs/{id}', [FaqController::class, 'update']);
+    Route::delete('faqs/{id}', [FaqController::class, 'destroy']);
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout']);
