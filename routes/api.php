@@ -64,6 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Notification
     Route::get('/list-notifications', [NotificationController::class, 'getCostomerNotifications']);
     Route::get('/read-notifications/{id}', [NotificationController::class, 'markAsReadNotifications']);
+    Route::get('/read-all-notifications', [NotificationController::class, 'markAllAsReadNotifications']);
 
     // FAQ
     Route::get('faqs', [FaqController::class, 'index']);
@@ -97,6 +98,7 @@ Route::middleware('auth:sanctum')->prefix('staff')->group(function () {
     // Notification
     Route::get('/list-notifications', [NotificationController::class, 'getStaffNotifications']);
     Route::get('/read-notifications/{id}', [NotificationController::class, 'markAsReadNotifications']);
+    Route::get('/read-all-notifications', [NotificationController::class, 'markAllStaffNotificationsAsRead']);
 
     // FAQ
     Route::get('faqs', [FaqController::class, 'index']);

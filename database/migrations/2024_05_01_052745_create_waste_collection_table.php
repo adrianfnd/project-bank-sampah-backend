@@ -21,7 +21,7 @@ return new class extends Migration
             $table->float('weight_total')->nullable();
             $table->float('point_total')->nullable();
             $table->string('address');
-            $table->timestamp('collection_date');
+            $table->date('collection_date');
             $table->enum('confirmation_status', ['menunggu_konfirmasi', 'dikonfirmasi', 'berhasil'])->default('menunggu_konfirmasi');
             $table->string('created_by');
             $table->foreign('created_by')->references('id')->on('users');

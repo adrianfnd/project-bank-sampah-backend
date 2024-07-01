@@ -131,5 +131,57 @@ class NotificationController extends Controller
             ], 500);
         }
     }
+
+    public function markAllAsReadNotifications()
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return response()->json([
+                    'message' => 'Unauthorized',
+                ], 401);
+            }
+
+            Notification::where('user_id', $user->id)->update(['status' => 'read']);
+
+            return response()->json([
+                'message' => 'All notifications marked as read',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function markAllStaffNotificationsAsRead()
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return response()->json([
+                    'message' => 'Unauthorized',
+                ], 401);
+            }
+
+            $staffUsers = User::whereHas('role', function ($query) {
+                $query->where('name', 'staff');
+            })->pluck('id');
+
+            Notification::whereIn('user_id', $staffUsers)->update(['status' => 'read']);
+
+            return response()->json([
+                'message' => 'All staff notifications marked as read',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
 
