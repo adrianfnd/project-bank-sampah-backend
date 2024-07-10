@@ -76,7 +76,6 @@ class HistoryController extends Controller
         }
     }
     
-    
     public function pointRedemptionHistoryCostumer(Request $request)
     {
         try {
@@ -182,7 +181,7 @@ class HistoryController extends Controller
         }
     }
     
-    public function wasteCollectionHistoryStaff()
+    public function wasteCollectionHistoryStaff(Request $request)
     {
         try {
             $user = Auth::user();
@@ -193,23 +192,25 @@ class HistoryController extends Controller
                 ], 401);
             }
     
-            $wasteCollections = WasteCollection::orderBy('collection_date', 'desc')->get();
+            $query = WasteCollection::orderBy('collection_date', 'desc');
+
+            if ($request->has('nama_nasabah')) {
+                $query->where('name', 'like', '%' . $request->nama_nasabah . '%');
+            }
+    
+            $wasteCollections = $query->get();
     
             $data = $wasteCollections->map(function($collection) {
                 $wastes = Waste::where('waste_collection_id', $collection->id)->get();
                 
                 return [
                     'date' => $collection->collection_date,
+                    'name' => $collection->name,
                     'description' => $collection->description,
                     'weight_total' => $wastes->sum('weight'),
                     'point_total' => $wastes->sum('point'),
                     'confirmation_status' => ucwords(str_replace('_', ' ', $collection->confirmation_status)),
-                    'details' => [
-                        'Organic' => $wastes->where('category', 'organic')->sum('weight'),
-                        'Non Organic' => $wastes->where('category', 'non_organic')->sum('weight'),
-                        'B3' => $wastes->where('category', 'b3')->sum('weight'),
-                        'Other' => $wastes->whereNotIn('category', ['organic', 'non_organic', 'b3'])->sum('weight'),
-                    ],
+                    'details' => $wastes->groupBy('category')->map->sum('weight'),
                 ];
             });
     
@@ -223,8 +224,8 @@ class HistoryController extends Controller
             ], 500);
         }
     }
-
-    public function pointRedemptionHistoryStaff()
+    
+    public function pointRedemptionHistoryStaff(Request $request)
     {
         try {
             $user = Auth::user();
@@ -235,14 +236,38 @@ class HistoryController extends Controller
                 ], 401);
             }
     
-            $transactions = Transaction::where('transaction_type', 'pembayaran_tagihan')
+            $transactionQuery = Transaction::where('transaction_type', 'pembayaran_tagihan')
                 ->orderBy('created_at', 'desc')
-                ->with(['ppobPayment', 'xenditLog'])
-                ->get();
+                ->with(['ppobPayment', 'xenditLog', 'user']);
+    
+            $productExchangeQuery = DB::table('product_exchanges')
+                ->select(
+                    'user_id',
+                    'exchange_date',
+                    'created_by',
+                    DB::raw('SUM(total_points) as total_points'),
+                    DB::raw('GROUP_CONCAT(product_id) as product_ids'),
+                    DB::raw('GROUP_CONCAT(quantity) as quantities')
+                )
+                ->groupBy('user_id', 'exchange_date', 'created_by')
+                ->orderBy('exchange_date', 'desc');
+
+            if ($request->has('nama_nasabah')) {
+                $transactionQuery->whereHas('user', function ($query) use ($request) {
+                    $query->where('name', 'like', '%' . $request->nama_nasabah . '%');
+                });
+    
+                $productExchangeQuery->join('users', 'product_exchanges.user_id', '=', 'users.id')
+                    ->where('users.name', 'like', '%' . $request->nama_nasabah . '%');
+            }
+    
+            $transactions = $transactionQuery->get();
+            $productExchanges = $productExchangeQuery->get();
     
             $transactionData = $transactions->map(function ($transaction) {
                 return [
                     'date' => $transaction->created_at->format('d M Y'),
+                    'name' => $transaction->user->name,
                     'type' => 'pembayaran_tagihan',
                     'total_balance_involved' => $transaction->total_balance_involved,
                     'status' => 'Berhasil',
@@ -256,19 +281,6 @@ class HistoryController extends Controller
                     ] : null,
                 ];
             });
-    
-            $productExchanges = DB::table('product_exchanges')
-                ->select(
-                    'user_id',
-                    'exchange_date',
-                    'created_by',
-                    DB::raw('SUM(total_points) as total_points'),
-                    DB::raw('GROUP_CONCAT(product_id) as product_ids'),
-                    DB::raw('GROUP_CONCAT(quantity) as quantities')
-                )
-                ->groupBy('user_id', 'exchange_date', 'created_by')
-                ->orderBy('exchange_date', 'desc')
-                ->get();
     
             $productExchangeData = $productExchanges->map(function ($exchange) {
                 $productIds = explode(',', $exchange->product_ids);
@@ -286,8 +298,11 @@ class HistoryController extends Controller
                     ];
                 }
     
+                $user = User::find($exchange->user_id);
+    
                 return [
                     'date' => (new \DateTime($exchange->exchange_date))->format('d M Y'),
+                    'name' => $user ? $user->name : 'Unknown',
                     'type' => 'penukaran_produk',
                     'total_balance_involved' => $exchange->total_points,
                     'status' => 'Berhasil',
