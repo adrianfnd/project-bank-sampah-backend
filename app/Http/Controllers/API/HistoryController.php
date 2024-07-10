@@ -7,6 +7,7 @@ use App\Models\Waste;
 use App\Models\Transaction;
 use App\Models\Product;
 use App\Models\ProductExchange;
+use App\Models\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -56,12 +57,7 @@ class HistoryController extends Controller
                     'weight_total' => $wastes->sum('weight'),
                     'point_total' => $wastes->sum('point'),
                     'confirmation_status' => ucwords(str_replace('_', ' ', $collection->confirmation_status)),
-                    'details' => [
-                        'Organic' => $wastes->where('category', 'organic')->sum('weight'),
-                        'Non Organic' => $wastes->where('category', 'non_organic')->sum('weight'),
-                        'B3' => $wastes->where('category', 'b3')->sum('weight'),
-                        'Other' => $wastes->whereNotIn('category', ['organic', 'non_organic', 'b3'])->sum('weight'),
-                    ],
+                    'details' => $wastes->groupBy('category')->map->sum('weight'),
                 ];
             });
     
@@ -192,7 +188,24 @@ class HistoryController extends Controller
                 ], 401);
             }
     
-            $query = WasteCollection::orderBy('collection_date', 'desc');
+            $validator = Validator::make($request->all(), [
+                'month' => 'required|integer|min:1|max:12',
+                'year' => 'required|integer|min:1900|max:' . date('Y'),
+            ]);
+    
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation error',
+                    'errors' => $validator->errors(),
+                ], 400);
+            }
+    
+            $month = $request->input('month');
+            $year = $request->input('year');
+    
+            $query = WasteCollection::whereMonth('collection_date', $month)
+                ->whereYear('collection_date', $year)
+                ->orderBy('collection_date', 'desc');
 
             if ($request->has('nama_nasabah')) {
                 $query->where('name', 'like', '%' . $request->nama_nasabah . '%');
@@ -236,7 +249,24 @@ class HistoryController extends Controller
                 ], 401);
             }
     
+            $validator = Validator::make($request->all(), [
+                'month' => 'required|integer|min:1|max:12',
+                'year' => 'required|integer|min:1900|max:' . date('Y'),
+            ]);
+    
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation error',
+                    'errors' => $validator->errors(),
+                ], 400);
+            }
+    
+            $month = $request->input('month');
+            $year = $request->input('year');
+    
             $transactionQuery = Transaction::where('transaction_type', 'pembayaran_tagihan')
+                ->whereMonth('created_at', $month)
+                ->whereYear('created_at', $year)
                 ->orderBy('created_at', 'desc')
                 ->with(['ppobPayment', 'xenditLog', 'user']);
     
@@ -249,6 +279,8 @@ class HistoryController extends Controller
                     DB::raw('GROUP_CONCAT(product_id) as product_ids'),
                     DB::raw('GROUP_CONCAT(quantity) as quantities')
                 )
+                ->whereMonth('exchange_date', $month)
+                ->whereYear('exchange_date', $year)
                 ->groupBy('user_id', 'exchange_date', 'created_by')
                 ->orderBy('exchange_date', 'desc');
 
@@ -323,4 +355,3 @@ class HistoryController extends Controller
         }
     }
 }
-
