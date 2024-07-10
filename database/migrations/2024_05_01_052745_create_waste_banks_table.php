@@ -19,8 +19,8 @@ return new class extends Migration
             $table->text('address');
             $table->string('user_id');
             $table->foreign('user_id')->references('id')->on('users');
-            $table->string('longitude');
-            $table->string('latitude');
+            $table->decimal('longitude', 13, 10);
+            $table->decimal('latitude', 12, 10);
             $table->timestamps();
         });
     }

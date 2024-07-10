@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Models\Notification;
 use App\Models\User;
 use App\Models\WasteCollection;
+use App\Models\WasteBank;
 use App\Models\Waste;
 use App\Models\WasteCategory;
 use App\Http\Controllers\Controller;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class WasteCollectionController extends Controller
 {
@@ -53,18 +55,20 @@ class WasteCollectionController extends Controller
     {
         try {
             $user = Auth::user();
-
+    
             if (!$user) {
                 return response()->json([
                     'message' => 'Unauthorized',
                 ], 401);
             }
-
+    
             $validator = Validator::make($request->all(), [
                 'address' => 'required|string',
                 'date' => 'required|date',
+                'latitude' => 'required|numeric',
+                'longitude' => 'required|numeric',
             ]);
-
+    
             if ($validator->fails()) {
                 return response()->json([
                     'message' => 'Validation error',
@@ -72,8 +76,29 @@ class WasteCollectionController extends Controller
                 ], 400);
             }
 
-            $collectionDate = date('Y-m-d H:i:s', strtotime($request->date));
+            $wasteBank = WasteBank::where('user_id', $user->id)->first();
+    
+            if (!$wasteBank) {
+                return response()->json([
+                    'message' => 'User does not have an associated waste bank',
+                ], 400);
+            }
 
+            $distance = $this->calculateDistance(
+                $wasteBank->latitude,
+                $wasteBank->longitude,
+                $request->latitude,
+                $request->longitude
+            );
+
+            if ($distance > 5) {
+                return response()->json([
+                    'message' => 'Collection point is outside the 5km radius of your waste bank',  // Update pesan
+                ], 400);
+            }
+
+            $collectionDate = date('Y-m-d H:i:s', strtotime($request->date));
+    
             $wasteCollection = WasteCollection::create([
                 'id' => Str::uuid(),
                 'user_id' => $user->id,
@@ -81,13 +106,15 @@ class WasteCollectionController extends Controller
                 'collection_date' => $collectionDate,
                 'confirmation_status' => 'menunggu_konfirmasi',
                 'address' => $request->address,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
                 'created_by' => $user->id,
             ]);
-
+    
             $adminUser = User::whereHas('role', function ($query) {
                 $query->where('name', 'staff');
             })->first();
-
+    
             if ($adminUser) {
                 Notification::create([
                     'title' => 'Permintaan Penjemputan Sampah',
@@ -97,7 +124,7 @@ class WasteCollectionController extends Controller
                     'status' => 'unread',
                 ]);
             }
-
+    
             return response()->json([
                 'success' => true,
                 'message' => 'Waste collection created successfully',
@@ -109,6 +136,21 @@ class WasteCollectionController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+    
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371.0;
+    
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+    
+        $a = sin($dLat/2) * sin($dLat/2) +
+             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+             sin($dLon/2) * sin($dLon/2);
+        $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+    
+        return $earthRadius * $c;
     }
 
     public function confirmWasteCollection(Request $request, $id)

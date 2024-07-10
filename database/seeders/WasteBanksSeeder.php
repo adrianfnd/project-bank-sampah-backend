@@ -23,8 +23,8 @@ class WasteBanksSeeder extends Seeder
                 'name' => 'Desa Sindangpanon',
                 'address' => 'Sindangpanon, Banjaran, Kabupaten Bandung, Jawa Barat',
                 'user_id' => $user->id,
-                'longitude' => '107.5830623',
-                'latitude' => '-7.0606974',
+                'longitude' => '107.58677990',
+                'latitude' => '-7.07736310',
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
