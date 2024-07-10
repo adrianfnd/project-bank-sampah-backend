@@ -13,15 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('wastes', function (Blueprint $table) {
+        Schema::create('waste_categories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->unsignedBigInteger('category_id');
-            $table->foreign('category_id')->references('id')->on('waste_categories');
-            $table->float('weight');
-            $table->float('point');
-            $table->string('waste_collection_id')->nullable();
-            $table->foreign('waste_collection_id')->references('id')->on('waste_collections');
+            $table->decimal('price_per_unit', 10, 2);
+            $table->enum('unit', ['kg', 'piece']);
             $table->timestamps();
         });
     }
@@ -33,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('waste_collections');
+        Schema::dropIfExists('waste_categories');
     }
 };

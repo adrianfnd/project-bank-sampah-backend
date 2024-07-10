@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             XenditLogsSeeder::class,
             WasteBanksSeeder::class,
             WasteCollectionsSeeder::class,
+            WasteCategorySeeder::class,
             WastesSeeder::class,
             TransactionsSeeder::class,
             ProductsSeeder::class,
