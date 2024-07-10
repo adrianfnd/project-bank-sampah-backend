@@ -6,6 +6,7 @@ use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\HomeController;
 use App\Http\Controllers\API\ProductController;
+use App\Http\Controllers\API\WasteCategoryController;
 use App\Http\Controllers\API\HistoryController;
 use App\Http\Controllers\API\ProductExchangeController;
 use App\Http\Controllers\API\NotificationController;
@@ -74,12 +75,24 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->prefix('staff')->group(function () {
+    // Profile
+    Route::get('/profile', [UserController::class, 'profileStaff']);
+    Route::post('/profile/update', [UserController::class, 'updateProfileStaff']);
+    Route::post('/profile/update-password', [UserController::class, 'updatePasswordStaff']);
+
     // Products
     Route::get('/list-products', [ProductController::class, 'index']);
     Route::get('/products/{id}', [ProductController::class, 'show']);
     Route::post('/products', [ProductController::class, 'store']);
     Route::put('/products/{id}', [ProductController::class, 'update']);
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+
+    // Waste Categories
+    Route::get('/list-waste-categories', [WasteCategoryController::class, 'index']);
+    Route::get('/waste-categories/{id}', [WasteCategoryController::class, 'show']);
+    Route::post('/waste-categories', [WasteCategoryController::class, 'store']);
+    Route::put('/waste-categories/{id}', [WasteCategoryController::class, 'update']);
+    Route::delete('/waste-categories/{id}', [WasteCategoryController::class, 'destroy']);
 
     // Waste Collection
     Route::get('/waste-collections', [WasteCollectionController::class, 'index']);
