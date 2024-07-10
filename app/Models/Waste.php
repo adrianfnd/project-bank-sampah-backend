@@ -11,7 +11,7 @@ class Waste extends Model
 
     protected $fillable = [
         'name',
-        'category',
+        'category_id',
         'weight',
         'point',
         'waste_collection_id',

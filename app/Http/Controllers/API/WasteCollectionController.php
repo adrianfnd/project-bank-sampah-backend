@@ -6,6 +6,7 @@ use App\Models\Notification;
 use App\Models\User;
 use App\Models\WasteCollection;
 use App\Models\Waste;
+use App\Models\WasteCategory;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -17,7 +18,7 @@ class WasteCollectionController extends Controller
     public function index()
     {
         try {
-            $wasteCollections = WasteCollection::with('user')
+            $wasteCollections = WasteCollection::with(['user', 'wastes.category'])
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->groupBy('confirmation_status');
@@ -27,12 +28,14 @@ class WasteCollectionController extends Controller
             foreach ($wasteCollections as $status => $collections) {
                 $sortedCollections = $collections->sortByDesc('created_at');
                 $data[$status] = $sortedCollections->map(function ($collection) {
+                    $categories = $collection->wastes->pluck('category.name')->unique();
                     return [
                         'id' => $collection->id,
                         'user' => $collection->user->name,
                         'address' => $collection->address,
                         'date' => $collection->collection_date,
                         'confirmation_status' => ucwords(str_replace('_', ' ', $collection->confirmation_status)),
+                        'categories' => $categories,
                     ];
                 })->values();
             }
@@ -44,7 +47,7 @@ class WasteCollectionController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
-    }    
+    }  
 
     public function createWasteCollection(Request $request)
     {
@@ -138,12 +141,13 @@ class WasteCollectionController extends Controller
     public function submitWasteCollection(Request $request, $id)
     {
         try {
-            $validator = Validator::make($request->all(), [
-                'sampah_organik' => 'nullable|numeric',
-                'sampah_non_organik' => 'nullable|numeric',
-                'sampah_b3' => 'nullable|numeric',
-                'total_point' => 'required|numeric',
-            ]);
+            $wasteCategories = WasteCategory::all();
+            $validationRules = [];
+            foreach ($wasteCategories as $category) {
+                $validationRules[$category->name] = 'nullable|numeric|min:0';
+            }
+    
+            $validator = Validator::make($request->all(), $validationRules);
     
             if ($validator->fails()) {
                 return response()->json([
@@ -160,69 +164,38 @@ class WasteCollectionController extends Controller
                 return response()->json(['message' => 'Waste Collection not found.'], 404);
             }
     
+            $totalWeight = 0;
+            $totalPoints = 0;
+    
+            foreach ($wasteCategories as $category) {
+                $amount = $request->input($category->name, 0);
+                if ($amount > 0) {
+                    $weight = $amount;
+                    $points = $amount * $category->price_per_unit;
+    
+                    Waste::create([
+                        'name' => $category->name,
+                        'category_id' => $category->id,
+                        'weight' => $weight,
+                        'point' => $points,
+                        'waste_collection_id' => $wasteCollection->id,
+                    ]);
+    
+                    $totalWeight += $weight;
+                    $totalPoints += $points;
+                }
+            }
+    
             $wasteCollection->confirmation_status = 'berhasil';
-            $wasteCollection->weight_total = $request->input('sampah_organik') + $request->input('sampah_non_organik') + $request->input('sampah_b3');
-            $wasteCollection->point_total = $request->input('total_point');
+            $wasteCollection->weight_total = $totalWeight;
+            $wasteCollection->point_total = $totalPoints;
             $wasteCollection->save();
     
-            $totalWeight = 0;
-            $weights = [];
-    
-            if ($request->has('sampah_organik')) {
-                $weights['organic'] = $request->input('sampah_organik');
-                $totalWeight += $request->input('sampah_organik');
-            }
-    
-            if ($request->has('sampah_non_organik')) {
-                $weights['non_organic'] = $request->input('sampah_non_organik');
-                $totalWeight += $request->input('sampah_non_organik');
-            }
-    
-            if ($request->has('sampah_b3')) {
-                $weights['b3'] = $request->input('sampah_b3');
-                $totalWeight += $request->input('sampah_b3');
-            }
-    
-            if ($totalWeight > 0) {
-                $pointsPerWeight = $request->input('total_point') / $totalWeight;
-    
-                if (isset($weights['organic'])) {
-                    $organicWaste = Waste::create([
-                        'name' => 'Organic Waste',
-                        'category' => 'organic',
-                        'weight' => $weights['organic'],
-                        'point' => $pointsPerWeight * $weights['organic'],
-                        'waste_collection_id' => $wasteCollection->id,
-                    ]);
-                }
-    
-                if (isset($weights['non_organic'])) {
-                    $nonOrganicWaste = Waste::create([
-                        'name' => 'Non-Organic Waste',
-                        'category' => 'non_organic',
-                        'weight' => $weights['non_organic'],
-                        'point' => $pointsPerWeight * $weights['non_organic'],
-                        'waste_collection_id' => $wasteCollection->id,
-                    ]);
-                }
-    
-                if (isset($weights['b3'])) {
-                    $b3Waste = Waste::create([
-                        'name' => 'B3 Waste',
-                        'category' => 'b3',
-                        'weight' => $weights['b3'],
-                        'point' => $pointsPerWeight * $weights['b3'],
-                        'waste_collection_id' => $wasteCollection->id,
-                    ]);
-                }
-            }
-
             $user = User::find($wasteCollection->user_id);
-            
-            $user->current_point += $request->input('total_point');
+            $user->current_point += $totalPoints;
             $user->save();
     
-            $notification = Notification::create([
+            Notification::create([
                 'title' => 'Penjemputan Sampah Berhasil',
                 'user_id' => $wasteCollection->user_id,
                 'description' => 'Penjemputan sampah Anda telah berhasil dilakukan.',
@@ -238,19 +211,21 @@ class WasteCollectionController extends Controller
             ], 500);
         }
     }
-
+    
     public function submitWasteCollectionManual(Request $request)
     {
         try {
-            $validator = Validator::make($request->all(), [
+            $wasteCategories = WasteCategory::all();
+            $validationRules = [
                 'nama_nasabah' => 'required_without:email|string|max:255',
                 'email' => 'required_without:nama_nasabah|string|email|max:255',
                 'address' => 'required|string|max:255',
-                'sampah_organik' => 'nullable|numeric',
-                'sampah_non_organik' => 'nullable|numeric',
-                'sampah_b3' => 'nullable|numeric',
-                'total_point' => 'required|numeric',
-            ]);
+            ];
+            foreach ($wasteCategories as $category) {
+                $validationRules[$category->name] = 'nullable|numeric|min:0';
+            }
+    
+            $validator = Validator::make($request->all(), $validationRules);
     
             if ($validator->fails()) {
                 return response()->json([
@@ -261,8 +236,6 @@ class WasteCollectionController extends Controller
     
             $wasteCollection = new WasteCollection();
             $wasteCollection->id = Str::uuid();
-            $wasteCollection->weight_total = $request->input('sampah_organik') + $request->input('sampah_non_organik') + $request->input('sampah_b3');
-            $wasteCollection->point_total = $request->input('total_point');
             $wasteCollection->address = $request->input('address');
             $wasteCollection->collection_date = now();
             $wasteCollection->confirmation_status = 'berhasil';
@@ -285,59 +258,33 @@ class WasteCollectionController extends Controller
             $wasteCollection->save();
     
             $totalWeight = 0;
-            $weights = [];
+            $totalPoints = 0;
     
-            if ($request->has('sampah_organik')) {
-                $weights['organic'] = $request->input('sampah_organik');
-                $totalWeight += $request->input('sampah_organik');
-            }
+            foreach ($wasteCategories as $category) {
+                $amount = $request->input($category->name, 0);
+                if ($amount > 0) {
+                    $weight = $amount;
+                    $points = $amount * $category->price_per_unit;
     
-            if ($request->has('sampah_non_organik')) {
-                $weights['non_organic'] = $request->input('sampah_non_organik');
-                $totalWeight += $request->input('sampah_non_organik');
-            }
-    
-            if ($request->has('sampah_b3')) {
-                $weights['b3'] = $request->input('sampah_b3');
-                $totalWeight += $request->input('sampah_b3');
-            }
-    
-            if ($totalWeight > 0) {
-                $pointsPerWeight = $request->input('total_point') / $totalWeight;
-    
-                if (isset($weights['organic'])) {
                     Waste::create([
-                        'name' => 'Organic Waste',
-                        'category' => 'organic',
-                        'weight' => $weights['organic'],
-                        'point' => $pointsPerWeight * $weights['organic'],
+                        'name' => $category->name,
+                        'category_id' => $category->id,
+                        'weight' => $weight,
+                        'point' => $points,
                         'waste_collection_id' => $wasteCollection->id,
                     ]);
-                }
     
-                if (isset($weights['non_organic'])) {
-                    Waste::create([
-                        'name' => 'Non-Organic Waste',
-                        'category' => 'non_organic',
-                        'weight' => $weights['non_organic'],
-                        'point' => $pointsPerWeight * $weights['non_organic'],
-                        'waste_collection_id' => $wasteCollection->id,
-                    ]);
-                }
-    
-                if (isset($weights['b3'])) {
-                    Waste::create([
-                        'name' => 'B3 Waste',
-                        'category' => 'b3',
-                        'weight' => $weights['b3'],
-                        'point' => $pointsPerWeight * $weights['b3'],
-                        'waste_collection_id' => $wasteCollection->id,
-                    ]);
+                    $totalWeight += $weight;
+                    $totalPoints += $points;
                 }
             }
     
-            if ($request->has('email')) {
-                $user->current_point += $request->input('total_point');
+            $wasteCollection->weight_total = $totalWeight;
+            $wasteCollection->point_total = $totalPoints;
+            $wasteCollection->save();
+    
+            if ($request->has('email') && isset($user)) {
+                $user->current_point += $totalPoints;
                 $user->save();
             }
     
