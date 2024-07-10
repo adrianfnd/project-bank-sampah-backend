@@ -14,18 +14,22 @@ class WasteBanksSeeder extends Seeder
      */
     public function run(): void
     {
-        $banks = [];
-        for ($i = 1; $i <= 10; $i++) {
-            $banks[] = [
-                'id' => Str::uuid(),
-                'name' => 'Waste Bank ' . $i,
-                'address' => 'Address ' . $i,
-                'user_id' => DB::table('users')->inRandomOrder()->first()->id,
-                'created_at' => now(),
-                'updated_at' => now()
-            ];
-        }
+        $customerRoleId = DB::table('roles')->where('name', 'costumer')->value('id');
+        $customerUsers = DB::table('users')->where('role_id', $customerRoleId)->get();
 
-        DB::table('waste_banks')->insert($banks);
+        foreach ($customerUsers as $user) {
+            $wasteBank = [
+                'id' => Str::uuid(),
+                'name' => 'Desa Sindangpanon',
+                'address' => 'Sindangpanon, Banjaran, Kabupaten Bandung, Jawa Barat',
+                'user_id' => $user->id,
+                'longitude' => '107.5830623',
+                'latitude' => '-7.0606974',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+
+            DB::table('waste_banks')->insert($wasteBank);
+        }
     }
 }

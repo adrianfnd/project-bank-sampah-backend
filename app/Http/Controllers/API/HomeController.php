@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\WasteCollection;
+use App\Models\WasteCategory;
 use App\Models\WasteBank;
 use App\Models\Waste;
 use App\Http\Controllers\Controller;
@@ -37,73 +38,38 @@ class HomeController extends Controller
     
             $month = $request->query('month');
             $year = $request->query('year');
-
-            $organik = WasteCollection::where('user_id', $user->id)
-                ->whereMonth('collection_date', $month)
-                ->whereYear('collection_date', $year)
-                ->with(['waste' => function ($query) {
-                    $query->where('category', 'organic');
-                }])
-                ->get()
-                ->map(function ($collection) {
-                    $totalWeight = Waste::where('waste_collection_id', $collection->id)
-                        ->where('category', 'organic')
-                        ->sum('weight');
-                    $totalPoint = Waste::where('waste_collection_id', $collection->id)
-                        ->where('category', 'organic')
-                        ->sum('point');
-                    return [
-                        'waste_weight' => $totalWeight,
-                        'waste_point' => $totalPoint,
-                        'collection_date' => $collection->collection_date,
-                    ];
-                })
-                ->first();
-
-            $nonOrganic = WasteCollection::where('user_id', $user->id)
-                ->whereMonth('collection_date', $month)
-                ->whereYear('collection_date', $year)
-                ->with(['waste' => function ($query) {
-                    $query->where('category', 'non_organic');
-                }])
-                ->get()
-                ->map(function ($collection) {
-                    $totalWeight = Waste::where('waste_collection_id', $collection->id)
-                        ->where('category', 'non_organic')
-                        ->sum('weight');
-                    $totalPoint = Waste::where('waste_collection_id', $collection->id)
-                        ->where('category', 'non_organic')
-                        ->sum('point');
-                    return [
-                        'waste_weight' => $totalWeight,
-                        'waste_point' => $totalPoint,
-                        'collection_date' => $collection->collection_date,
-                    ];
-                })
-                ->first();
-
-            $b3 = WasteCollection::where('user_id', $user->id)
-                ->whereMonth('collection_date', $month)
-                ->whereYear('collection_date', $year)
-                ->with(['waste' => function ($query) {
-                    $query->where('category', 'b3');
-                }])
-                ->get()
-                ->map(function ($collection) {
-                    $totalWeight = Waste::where('waste_collection_id', $collection->id)
-                        ->where('category', 'b3')
-                        ->sum('weight');
-                    $totalPoint = Waste::where('waste_collection_id', $collection->id)
-                        ->where('category', 'b3')
-                        ->sum('point');
-                    return [
-                        'waste_weight' => $totalWeight,
-                        'waste_point' => $totalPoint,
-                        'collection_date' => $collection->collection_date,
-                    ];
-                })
-                ->first();
-
+    
+            $wasteCategories = WasteCategory::all();
+            $wasteCollections = [];
+    
+            foreach ($wasteCategories as $category) {
+                $categoryName = $category->name;
+                
+                $wasteData = WasteCollection::where('user_id', $user->id)
+                    ->whereMonth('collection_date', $month)
+                    ->whereYear('collection_date', $year)
+                    ->with(['waste' => function ($query) use ($category) {
+                        $query->where('category_id', $category->id);
+                    }])
+                    ->get()
+                    ->map(function ($collection) use ($category) {
+                        $totalWeight = Waste::where('waste_collection_id', $collection->id)
+                            ->where('category_id', $category->id)
+                            ->sum('weight');
+                        $totalPoint = Waste::where('waste_collection_id', $collection->id)
+                            ->where('category_id', $category->id)
+                            ->sum('point');
+                        return [
+                            'waste_weight' => $totalWeight,
+                            'waste_point' => $totalPoint,
+                            'collection_date' => $collection->collection_date,
+                        ];
+                    })
+                    ->first();
+    
+                $wasteCollections[$categoryName] = $wasteData;
+            }
+    
             $totalPoint = WasteCollection::where('user_id', $user->id)
                 ->whereMonth('collection_date', $month)
                 ->whereYear('collection_date', $year)
@@ -112,11 +78,7 @@ class HomeController extends Controller
             return response()->json([
                 'data' => [
                     'total_point' => $totalPoint,
-                    'waste_collections' => [
-                        'organic' => $organik,
-                        'non_organic' => $nonOrganic,
-                        'b3' => $b3,
-                    ],
+                    'waste_collections' => $wasteCollections,
                 ]
             ], 200);
         } catch (\Exception $e) {
@@ -141,7 +103,9 @@ class HomeController extends Controller
             $wasteBank = WasteBank::where('user_id', $user->id)->first();
 
             return response()->json([
-                'waste_bank' => $wasteBank->name ?? 'Bank Sampah Desa Sindangpanon'
+                'waste_bank' => 'Bank Sampah ' . $wasteBank->name,
+                'longitude' => $wasteBank->longitude,
+                'latitude' => $wasteBank->latitude
             ], 200);
         } catch (\Exception $e) {
             return response()->json([

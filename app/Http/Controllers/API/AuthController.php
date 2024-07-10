@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\WasteBank;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Password;
@@ -24,7 +25,7 @@ class AuthController extends Controller
             'password' => 'required|string|min:8',
             'confirm_password' => 'required|same:password',
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
@@ -34,7 +35,7 @@ class AuthController extends Controller
         }
         
         $otp = rand(100000, 999999);
-
+    
         $user = User::create([
             'id' => rand(10000, 99999),
             'name' => $request->name,
@@ -45,16 +46,25 @@ class AuthController extends Controller
             'password' => bcrypt($request->password),
             'role_id' => 3,
         ]);
-
+    
+        WasteBank::create([
+            'id' => Str::uuid(),
+            'name' => 'Desa Sindangpanon',
+            'address' => 'Sindangpanon, Banjaran, Kabupaten Bandung, Jawa Barat',
+            'user_id' => $user->id,
+            'longitude' => '107.5830623',
+            'latitude' => '-7.0606974',
+        ]);
+    
         if ($request->email) {
             Mail::to($request->email)->send(new OTPMail($otp));
         } else if ($request->phone_number) {
             // Fungsi kirim whatsapp
         }
-
+    
         return response()->json([
             'success' => true,
-            'message' => 'User registered successfully otp has been sent to your email',
+            'message' => 'User registered successfully. OTP has been sent to your email.',
             'data' => [
                 'user' => $user,
             ],
