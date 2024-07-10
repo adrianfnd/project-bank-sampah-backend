@@ -62,6 +62,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Waste Collection
     Route::post('/waste-collections/create', [WasteCollectionController::class, 'createWasteCollection']);
 
+    // Waste Category
+    Route::get('/list-waste-categories', [WasteCategoryController::class, 'list']);
+
     // Notification
     Route::get('/list-notifications', [NotificationController::class, 'getCostomerNotifications']);
     Route::get('/read-notifications/{id}', [NotificationController::class, 'markAsReadNotifications']);

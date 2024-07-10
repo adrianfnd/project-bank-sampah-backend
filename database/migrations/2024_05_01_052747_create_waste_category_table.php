@@ -1,34 +1,34 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+namespace Database\Seeders;
 
-return new class extends Migration
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+
+class WasteCategorySeeder extends Seeder
 {
     /**
-     * Run the migrations.
-     *
-     * @return void
+     * Run the database seeds.
      */
-    public function up()
+    public function run(): void
     {
-        Schema::create('waste_categories', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->decimal('price_per_unit', 10, 2);
-            $table->enum('unit', ['kg', 'piece']);
-            $table->timestamps();
-        });
-    }
+        $categories = [
+            ['name' => 'Botol', 'price_per_unit' => 1500.00, 'unit' => 'kg', 'type' => 'recyclable'],
+            ['name' => 'Buku/Arsip', 'price_per_unit' => 500.00, 'unit' => 'kg', 'type' => 'recyclable'],
+            ['name' => 'Dus', 'price_per_unit' => 800.00, 'unit' => 'kg', 'type' => 'recyclable'],
+            ['name' => 'Galon', 'price_per_unit' => 5000.00, 'unit' => 'piece', 'type' => 'recyclable'],
+            ['name' => 'Duplek', 'price_per_unit' => 750.00, 'unit' => 'kg', 'type' => 'recyclable'],
+            ['name' => 'Emberan', 'price_per_unit' => 1000.00, 'unit' => 'kg', 'type' => 'recyclable'],
+            ['name' => 'Plastik Putih', 'price_per_unit' => 500.00, 'unit' => 'kg', 'type' => 'recyclable'],
+            ['name' => 'Plastik Hitam', 'price_per_unit' => 200.00, 'unit' => 'kg', 'type' => 'recyclable'],
+            ['name' => 'Besi', 'price_per_unit' => 2500.00, 'unit' => 'kg', 'type' => 'recyclable'],
+            ['name' => 'Kaleng', 'price_per_unit' => 1000.00, 'unit' => 'piece', 'type' => 'recyclable'],
+            ['name' => 'Kertas', 'price_per_unit' => 300.00, 'unit' => 'kg', 'type' => 'recyclable'], // Kategori tambahan
+        ];
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
-    public function down()
-    {
-        Schema::dropIfExists('waste_categories');
+        foreach ($categories as $category) {
+            DB::table('waste_categories')->insert($category);
+        }
     }
-};
+}

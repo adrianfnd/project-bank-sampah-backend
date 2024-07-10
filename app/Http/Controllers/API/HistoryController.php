@@ -8,6 +8,7 @@ use App\Models\Transaction;
 use App\Models\Product;
 use App\Models\ProductExchange;
 use App\Models\User;
+use App\Models\WasteCategory;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -51,13 +52,21 @@ class HistoryController extends Controller
             $data = $wasteCollections->map(function($collection) {
                 $wastes = Waste::where('waste_collection_id', $collection->id)->get();
                 
+                $details = $wastes->groupBy('category_id')->map(function($group) {
+                    $category = WasteCategory::find($group->first()->category_id);
+                    return [
+                        'category_name' => $category ? $category->name : 'Unknown',
+                        'weight' => $group->sum('weight')
+                    ];
+                })->values();
+                
                 return [
                     'date' => $collection->collection_date,
                     'description' => $collection->description,
                     'weight_total' => $wastes->sum('weight'),
                     'point_total' => $wastes->sum('point'),
                     'confirmation_status' => ucwords(str_replace('_', ' ', $collection->confirmation_status)),
-                    'details' => $wastes->groupBy('category')->map->sum('weight'),
+                    'details' => $details,
                 ];
             });
     
@@ -216,6 +225,14 @@ class HistoryController extends Controller
             $data = $wasteCollections->map(function($collection) {
                 $wastes = Waste::where('waste_collection_id', $collection->id)->get();
                 
+                $details = $wastes->groupBy('category_id')->map(function($group) {
+                    $category = WasteCategory::find($group->first()->category_id);
+                    return [
+                        'category_name' => $category ? $category->name : 'Unknown',
+                        'weight' => $group->sum('weight')
+                    ];
+                })->values();
+                
                 return [
                     'date' => $collection->collection_date,
                     'name' => $collection->name,
@@ -223,7 +240,7 @@ class HistoryController extends Controller
                     'weight_total' => $wastes->sum('weight'),
                     'point_total' => $wastes->sum('point'),
                     'confirmation_status' => ucwords(str_replace('_', ' ', $collection->confirmation_status)),
-                    'details' => $wastes->groupBy('category')->map->sum('weight'),
+                    'details' => $details,
                 ];
             });
     

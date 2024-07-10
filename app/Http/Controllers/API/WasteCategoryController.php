@@ -9,6 +9,28 @@ use Illuminate\Support\Facades\Validator;
 
 class WasteCategoryController extends Controller
 {
+    public function list(Request $request)
+    {
+        try {
+            $categories = WasteCategory::all()->map(function($category) {
+                return [
+                    'name' => $category->name,
+                    'type' => ucfirst($category->type),
+                    'price_per_unit' => number_format($category->price_per_unit, 0, ',', '.') . '/' . $category->unit,
+                ];
+            });
+
+            return response()->json([
+                'data' => $categories,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function index(Request $request)
     {
         try {
@@ -47,6 +69,7 @@ class WasteCategoryController extends Controller
             'name' => 'required|string|unique:waste_categories,name',
             'price_per_unit' => 'required|numeric|min:0',
             'unit' => 'required|in:kg,piece',
+            'type' => 'required|in:organic,inorganic,hazardous,recyclable',
         ]);
 
         if ($validator->fails()) {
@@ -77,6 +100,7 @@ class WasteCategoryController extends Controller
             'name' => 'string|unique:waste_categories,name,' . $id,
             'price_per_unit' => 'numeric|min:0',
             'unit' => 'in:kg,piece',
+            'type' => 'in:organic,inorganic,hazardous,recyclable',
         ]);
     
         if ($validator->fails()) {

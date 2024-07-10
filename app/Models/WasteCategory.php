@@ -12,7 +12,8 @@ class WasteCategory extends Model
     protected $fillable = [
         'name', 
         'price_per_unit', 
-        'unit'
+        'unit',
+        'type',
     ];
 
     public function wastes()

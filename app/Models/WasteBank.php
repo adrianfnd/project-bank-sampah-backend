@@ -22,6 +22,8 @@ class WasteBank extends Model
         'name',
         'address',
         'user_id',
+        'longitude',
+        'latitude',
     ];
 
     public function user()
