@@ -339,5 +339,103 @@ class WasteCollectionController extends Controller
         }
     }
     
+    public function calculateWasteCollection(Request $request)
+    {
+        try {
+            $wasteCategories = WasteCategory::all();
+            $validationRules = [];
+            foreach ($wasteCategories as $category) {
+                $validationRules[$category->name] = 'nullable|numeric|min:0';
+            }
+
+            $validator = Validator::make($request->all(), $validationRules);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation error',
+                    'errors' => $validator->errors(),
+                ], 400);
+            }
+
+            $totalPoints = 0;
+            $wasteByType = [
+                'organic' => 0,
+                'inorganic' => 0,
+                'hazardous' => 0,
+                'recyclable' => 0
+            ];
+
+            foreach ($wasteCategories as $category) {
+                $amount = $request->input($category->name, 0);
+                if ($amount > 0) {
+                    $points = $amount * $category->price_per_unit;
+                    $totalPoints += $points;
+
+                    $wasteByType[$category->type] += $amount;
+                }
+            }
+
+            return response()->json([
+                'total_points' => $totalPoints,
+                'waste_by_type' => $wasteByType
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function calculateWasteCollectionManual(Request $request)
+    {
+        try {
+            $wasteCategories = WasteCategory::all();
+            $validationRules = [
+                'nama_nasabah' => 'required|string|max:255',
+            ];
+            foreach ($wasteCategories as $category) {
+                $validationRules[$category->name] = 'nullable|numeric|min:0';
+            }
+
+            $validator = Validator::make($request->all(), $validationRules);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation error',
+                    'errors' => $validator->errors(),
+                ], 400);
+            }
+
+            $totalPoints = 0;
+            $wasteByType = [
+                'organic' => 0,
+                'inorganic' => 0,
+                'hazardous' => 0,
+                'recyclable' => 0
+            ];
+
+            foreach ($wasteCategories as $category) {
+                $amount = $request->input($category->name, 0);
+                if ($amount > 0) {
+                    $points = $amount * $category->price_per_unit;
+                    $totalPoints += $points;
+
+                    $wasteByType[$category->type] += $amount;
+                }
+            }
+
+            return response()->json([
+                'nama_nasabah' => $request->input('nama_nasabah'),
+                'total_points' => $totalPoints,
+                'waste_by_type' => $wasteByType
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
 

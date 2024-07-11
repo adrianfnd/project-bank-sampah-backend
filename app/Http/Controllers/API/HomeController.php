@@ -43,7 +43,7 @@ class HomeController extends Controller
             $wasteCollections = [];
     
             foreach ($wasteCategories as $category) {
-                $categoryName = $category->name;
+                $categoryType = $category->type;
                 
                 $wasteData = WasteCollection::where('user_id', $user->id)
                     ->whereMonth('collection_date', $month)
@@ -67,7 +67,7 @@ class HomeController extends Controller
                     })
                     ->first();
     
-                $wasteCollections[$categoryName] = $wasteData;
+                $wasteCollections[$categoryType] = $wasteData;
             }
     
             $totalPoint = WasteCollection::where('user_id', $user->id)
