@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('name');
             $table->decimal('price_per_unit', 10, 2);
             $table->enum('unit', ['kg', 'piece']);
-            $table->enum('type', ['organic', 'inorganic', 'hazardous', 'recyclable']);
+            $table->enum('type', ['organic', 'anorganic', 'b3']);
             $table->timestamps();
         });
     }
