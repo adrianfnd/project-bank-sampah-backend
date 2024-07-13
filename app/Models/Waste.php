@@ -24,6 +24,6 @@ class Waste extends Model
 
     public function category()
     {
-        return $this->belongsTo(WasteCategory::class, 'category');
+        return $this->belongsTo(WasteCategory::class, 'category_id');
     }
 }

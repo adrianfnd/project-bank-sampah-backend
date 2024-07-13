@@ -20,7 +20,7 @@ class WasteCollectionController extends Controller
     public function index()
     {
         try {
-            $wasteCollections = WasteCollection::with(['user', 'wastes.category'])
+            $wasteCollections = WasteCollection::with(['user'])
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->groupBy('confirmation_status');
@@ -30,14 +30,12 @@ class WasteCollectionController extends Controller
             foreach ($wasteCollections as $status => $collections) {
                 $sortedCollections = $collections->sortByDesc('created_at');
                 $data[$status] = $sortedCollections->map(function ($collection) {
-                    $categories = $collection->wastes->pluck('category.name')->unique();
                     return [
                         'id' => $collection->id,
                         'user' => $collection->user->name,
                         'address' => $collection->address,
                         'date' => $collection->collection_date,
                         'confirmation_status' => ucwords(str_replace('_', ' ', $collection->confirmation_status)),
-                        'categories' => $categories,
                     ];
                 })->values();
             }
@@ -49,8 +47,8 @@ class WasteCollectionController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
-    }  
-
+    }
+    
     public function createWasteCollection(Request $request)
     {
         try {
@@ -347,34 +345,35 @@ class WasteCollectionController extends Controller
             foreach ($wasteCategories as $category) {
                 $validationRules[$category->name] = 'nullable|numeric|min:0';
             }
-
+    
             $validator = Validator::make($request->all(), $validationRules);
-
+    
             if ($validator->fails()) {
                 return response()->json([
                     'message' => 'Validation error',
                     'errors' => $validator->errors(),
                 ], 400);
             }
-
+    
             $totalPoints = 0;
             $wasteByType = [
                 'organic' => 0,
-                'inorganic' => 0,
-                'hazardous' => 0,
-                'recyclable' => 0
+                'anorganic' => 0,
+                'b3' => 0,
             ];
-
+    
             foreach ($wasteCategories as $category) {
                 $amount = $request->input($category->name, 0);
                 if ($amount > 0) {
                     $points = $amount * $category->price_per_unit;
                     $totalPoints += $points;
 
-                    $wasteByType[$category->type] += $amount;
+                    if (isset($wasteByType[$category->type])) {
+                        $wasteByType[$category->type] += $amount;
+                    }
                 }
             }
-
+    
             return response()->json([
                 'total_points' => $totalPoints,
                 'waste_by_type' => $wasteByType
@@ -386,7 +385,7 @@ class WasteCollectionController extends Controller
             ], 500);
         }
     }
-
+    
     public function calculateWasteCollectionManual(Request $request)
     {
         try {
@@ -397,34 +396,35 @@ class WasteCollectionController extends Controller
             foreach ($wasteCategories as $category) {
                 $validationRules[$category->name] = 'nullable|numeric|min:0';
             }
-
+    
             $validator = Validator::make($request->all(), $validationRules);
-
+    
             if ($validator->fails()) {
                 return response()->json([
                     'message' => 'Validation error',
                     'errors' => $validator->errors(),
                 ], 400);
             }
-
+    
             $totalPoints = 0;
             $wasteByType = [
                 'organic' => 0,
-                'inorganic' => 0,
-                'hazardous' => 0,
-                'recyclable' => 0
+                'anorganic' => 0,
+                'b3' => 0,
             ];
-
+    
             foreach ($wasteCategories as $category) {
                 $amount = $request->input($category->name, 0);
                 if ($amount > 0) {
                     $points = $amount * $category->price_per_unit;
                     $totalPoints += $points;
-
-                    $wasteByType[$category->type] += $amount;
+    
+                    if (isset($wasteByType[$category->type])) {
+                        $wasteByType[$category->type] += $amount;
+                    }
                 }
             }
-
+    
             return response()->json([
                 'nama_nasabah' => $request->input('nama_nasabah'),
                 'total_points' => $totalPoints,

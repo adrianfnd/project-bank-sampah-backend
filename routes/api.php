@@ -107,7 +107,7 @@ Route::middleware('auth:sanctum')->prefix('staff')->group(function () {
     Route::get('/waste-collection-history', [HistoryController::class, 'wasteCollectionHistoryStaff']);
     Route::get('/point-redemption-history', [HistoryController::class, 'pointRedemptionHistoryStaff']);
     Route::post('/waste-collections/submit', [WasteCollectionController::class, 'submitWasteCollectionManual']);
-    Route::post('/waste-collections/calculate', [WasteCollectionController::class, 'calculateWasteCollectionManual']);
+    Route::post('/waste-collections/calculate-manual', [WasteCollectionController::class, 'calculateWasteCollectionManual']);
 
     // Nasabah
     Route::get('/list-nasabah', [NasabahController::class, 'index']);

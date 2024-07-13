@@ -8,6 +8,7 @@ use App\Models\WasteBank;
 use App\Models\Waste;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
@@ -39,35 +40,34 @@ class HomeController extends Controller
             $month = $request->query('month');
             $year = $request->query('year');
     
-            $wasteCategories = WasteCategory::all();
+            $wasteCategories = WasteCategory::all()->pluck('type', 'id');
             $wasteCollections = [];
     
-            foreach ($wasteCategories as $category) {
-                $categoryType = $category->type;
-                
-                $wasteData = WasteCollection::where('user_id', $user->id)
-                    ->whereMonth('collection_date', $month)
-                    ->whereYear('collection_date', $year)
-                    ->with(['waste' => function ($query) use ($category) {
-                        $query->where('category_id', $category->id);
-                    }])
-                    ->get()
-                    ->map(function ($collection) use ($category) {
-                        $totalWeight = Waste::where('waste_collection_id', $collection->id)
-                            ->where('category_id', $category->id)
-                            ->sum('weight');
-                        $totalPoint = Waste::where('waste_collection_id', $collection->id)
-                            ->where('category_id', $category->id)
-                            ->sum('point');
-                        return [
-                            'waste_weight' => $totalWeight,
-                            'waste_point' => $totalPoint,
-                            'collection_date' => $collection->collection_date,
-                        ];
-                    })
-                    ->first();
+            $wasteData = Waste::join('waste_collections', 'wastes.waste_collection_id', '=', 'waste_collections.id')
+                ->where('waste_collections.user_id', $user->id)
+                ->whereMonth('waste_collections.collection_date', $month)
+                ->whereYear('waste_collections.collection_date', $year)
+                ->select(
+                    'waste_collections.id as collection_id',
+                    'waste_collections.collection_date',
+                    'wastes.category_id',
+                    DB::raw('SUM(wastes.weight) as total_weight'),
+                    DB::raw('SUM(wastes.point) as total_point')
+                )
+                ->groupBy('waste_collections.id', 'waste_collections.collection_date', 'wastes.category_id')
+                ->get();
     
-                $wasteCollections[$categoryType] = $wasteData;
+            foreach ($wasteData as $waste) {
+                $categoryType = $wasteCategories[$waste->category_id];
+                if (!isset($wasteCollections[$categoryType])) {
+                    $wasteCollections[$categoryType] = [
+                        'waste_weight' => 0,
+                        'waste_point' => 0,
+                        'collection_date' => $waste->collection_date
+                    ];
+                }
+                $wasteCollections[$categoryType]['waste_weight'] += $waste->total_weight;
+                $wasteCollections[$categoryType]['waste_point'] += $waste->total_point;
             }
     
             $totalPoint = WasteCollection::where('user_id', $user->id)
