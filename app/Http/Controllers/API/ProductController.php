@@ -13,14 +13,12 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         try {
-            $limit = $request->input('limit', 10);
-
-            $products = Product::limit($limit)->get();
-
+            $products = Product::all();
+    
             $products->each(function ($product) use ($request) {
                 $product->image_url = $request->getSchemeAndHttpHost() . Storage::url('images/products/' . $product->image);
             });
-
+    
             return response()->json([
                 'data' => $products,
             ], 200);
@@ -30,7 +28,7 @@ class ProductController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
-    }
+    }    
 
     public function show($id, Request $request)
     {

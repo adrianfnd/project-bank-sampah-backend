@@ -69,7 +69,7 @@ class WasteCategoryController extends Controller
             'name' => 'required|string|unique:waste_categories,name',
             'price_per_unit' => 'required|numeric|min:0',
             'unit' => 'required|in:kg,piece',
-            'type' => 'required|in:organic,inorganic,hazardous,recyclable',
+            'type' => 'required|in:organic,anorganic,b3',
         ]);
 
         if ($validator->fails()) {
@@ -100,7 +100,7 @@ class WasteCategoryController extends Controller
             'name' => 'string|unique:waste_categories,name,' . $id,
             'price_per_unit' => 'numeric|min:0',
             'unit' => 'in:kg,piece',
-            'type' => 'in:organic,inorganic,hazardous,recyclable',
+            'type' => 'in:organic,anorganic,b3',
         ]);
     
         if ($validator->fails()) {

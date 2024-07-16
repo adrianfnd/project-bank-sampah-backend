@@ -10,13 +10,20 @@ use Illuminate\Database\QueryException;
 
 class NasabahController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $nasabah = User::whereHas('role', function ($query) {
+            $query = User::whereHas('role', function ($query) {
                 $query->where('name', 'costumer');
-            })->select('id', 'name', 'email', 'phone_number')->get();
-        
+            })->select('id', 'name', 'email', 'phone_number');
+    
+            if ($request->has('name')) {
+                $searchTerm = $request->query('name');
+                $query->where('name', 'like', '%' . $searchTerm . '%');
+            }
+    
+            $nasabah = $query->get();
+    
             $filteredNasabah = $nasabah->map(function ($user) {
                 $filteredData = [
                     'id' => $user->id,
