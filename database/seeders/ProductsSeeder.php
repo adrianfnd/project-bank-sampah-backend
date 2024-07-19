@@ -23,6 +23,7 @@ class ProductsSeeder extends Seeder
                 'image' => null,
                 'point_cost' => $point_cost,
                 'stock' => rand(1, 50),
+                'is_visible' => true,
                 'created_at' => now(),
                 'updated_at' => now()
             ];

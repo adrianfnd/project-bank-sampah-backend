@@ -84,7 +84,7 @@ Route::middleware('auth:sanctum')->prefix('staff')->group(function () {
     Route::post('/profile/update-password', [UserController::class, 'updatePasswordStaff']);
 
     // Products
-    Route::get('/list-products', [ProductController::class, 'index']);
+    Route::get('/list-products', [ProductController::class, 'staffIndex']);
     Route::get('/products/{id}', [ProductController::class, 'show']);
     Route::post('/products', [ProductController::class, 'store']);
     Route::put('/products/{id}', [ProductController::class, 'update']);

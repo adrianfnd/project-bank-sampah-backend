@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\Product;
+use App\Models\ProductExchange;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -11,6 +12,26 @@ use Illuminate\Support\Facades\Storage;
 class ProductController extends Controller
 {
     public function index(Request $request)
+    {
+        try {
+            $products = Product::where('is_visible', true)->get();
+    
+            $products->each(function ($product) use ($request) {
+                $product->image_url = $request->getSchemeAndHttpHost() . Storage::url('images/products/' . $product->image);
+            });
+    
+            return response()->json([
+                'data' => $products,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function staffIndex(Request $request)
     {
         try {
             $products = Product::all();
@@ -28,7 +49,7 @@ class ProductController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
-    }    
+    }
 
     public function show($id, Request $request)
     {
@@ -137,12 +158,25 @@ class ProductController extends Controller
     {
         try {
             $product = Product::findOrFail($id);
-            Storage::delete('public/images/products/' . $product->image);
-            $product->delete();
+            
+            $hasRelations = ProductExchange::where('product_id', $id)->exists();
 
-            return response()->json([
-                'message' => 'Product deleted successfully.',
-            ], 200);
+            if ($hasRelations) {
+                $product->update(['is_visible' => false]);
+
+                return response()->json([
+                    'message' => 'Product hidden from user list successfully.',
+                    'is_fully_deleted' => false
+                ], 200);
+            } else {
+                Storage::delete('public/images/products/' . $product->image);
+                $product->delete();
+
+                return response()->json([
+                    'message' => 'Product deleted successfully.',
+                    'is_fully_deleted' => true
+                ], 200);
+            }
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to delete product.',
@@ -151,4 +185,3 @@ class ProductController extends Controller
         }
     }
 }
-

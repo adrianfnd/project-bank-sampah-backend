@@ -15,7 +15,7 @@ class Product extends Model
         'image',
         'point_cost',
         'stock',
-        'image',
+        'is_visible',
     ];
 
     public function productExchanges()
