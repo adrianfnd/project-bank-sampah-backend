@@ -15,32 +15,33 @@ class NasabahController extends Controller
         try {
             $query = User::whereHas('role', function ($query) {
                 $query->where('name', 'costumer');
-            })->select('id', 'name', 'email', 'phone_number');
-    
+            })->select('id', 'name', 'email', 'phone_number')
+              ->orderBy('created_at', 'desc');
+
             if ($request->has('name')) {
                 $searchTerm = $request->query('name');
                 $query->where('name', 'like', '%' . $searchTerm . '%');
             }
-    
+
             $nasabah = $query->get();
-    
+
             $filteredNasabah = $nasabah->map(function ($user) {
                 $filteredData = [
                     'id' => $user->id,
                     'name' => $user->name,
                 ];
-    
+
                 if ($user->email) {
                     $filteredData['email'] = $user->email;
                 }
-    
+
                 if ($user->phone_number) {
                     $filteredData['phone_number'] = $user->phone_number;
                 }
-    
+
                 return $filteredData;
             });
-    
+
             return response()->json([
                 'success' => true,
                 'data' => $filteredNasabah,

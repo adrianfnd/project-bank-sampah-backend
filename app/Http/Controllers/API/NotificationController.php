@@ -24,6 +24,7 @@ class NotificationController extends Controller
             }
     
             $notifications = Notification::where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function ($notification) {
                     return [
@@ -66,7 +67,8 @@ class NotificationController extends Controller
                 $query->where('name', 'staff');
             })->pluck('id');
 
-            $notifications = Notification::where('user_id', $staffUsers)
+            $notifications = Notification::whereIn('user_id', $staffUsers)
+                ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function ($notification) {
                     return [
@@ -184,4 +186,3 @@ class NotificationController extends Controller
         }
     }
 }
-

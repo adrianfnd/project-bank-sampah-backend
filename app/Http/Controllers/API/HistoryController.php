@@ -68,7 +68,7 @@ class HistoryController extends Controller
                     'confirmation_status' => ucwords(str_replace('_', ' ', $collection->confirmation_status)),
                     'details' => $details,
                 ];
-            });
+            })->sortByDesc('date')->values();
     
             return response()->json([
                 'data' => $data,
@@ -242,7 +242,7 @@ class HistoryController extends Controller
                     'confirmation_status' => ucwords(str_replace('_', ' ', $collection->confirmation_status)),
                     'details' => $details,
                 ];
-            });
+            })->sortByDesc('date')->values();
     
             return response()->json([
                 'data' => $data,
@@ -254,7 +254,7 @@ class HistoryController extends Controller
             ], 500);
         }
     }
-    
+
     public function pointRedemptionHistoryStaff(Request $request)
     {
         try {
