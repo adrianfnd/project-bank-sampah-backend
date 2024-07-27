@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('image')->nullable();
             $table->float('point_cost');
             $table->integer('stock');
-            $table->boolean('is_visible')->default(1);
+            $table->boolean('is_visible')->default(true);
             $table->timestamps();
         });
     }

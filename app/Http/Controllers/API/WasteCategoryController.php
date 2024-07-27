@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\WasteCategory;
+use App\Models\Waste;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -12,7 +13,7 @@ class WasteCategoryController extends Controller
     public function list(Request $request)
     {
         try {
-            $categories = WasteCategory::all()->map(function($category) {
+            $categories = WasteCategory::where('is_visible', true)->get()->map(function($category) {
                 return [
                     'name' => $category->name,
                     'type' => ucfirst($category->type),
@@ -34,8 +35,7 @@ class WasteCategoryController extends Controller
     public function index(Request $request)
     {
         try {
-            $limit = $request->input('limit', 10);
-            $categories = WasteCategory::limit($limit)->get();
+            $categories = WasteCategory::where('is_visible', true)->get();
 
             return response()->json([
                 'data' => $categories,
@@ -71,17 +71,18 @@ class WasteCategoryController extends Controller
             'unit' => 'required|in:kg,piece',
             'type' => 'required|in:organic,anorganic,b3',
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation error',
                 'errors' => $validator->errors(),
             ], 422);
         }
-
+    
         try {
-            $category = WasteCategory::create($request->all());
-
+            $categoryData = array_merge($request->all(), ['is_visible' => true]);
+            $category = WasteCategory::create($categoryData);
+    
             return response()->json([
                 'message' => 'Waste category created successfully.',
                 'data' => $category,
@@ -93,7 +94,7 @@ class WasteCategoryController extends Controller
             ], 500);
         }
     }
-
+    
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
@@ -112,7 +113,9 @@ class WasteCategoryController extends Controller
     
         try {
             $category = WasteCategory::findOrFail($id);
-            $category->update($request->all());
+
+            $updateData = array_merge($request->all(), ['is_visible' => true]);
+            $category->update($updateData);
     
             return response()->json([
                 'message' => 'Waste category updated successfully.',
@@ -125,16 +128,29 @@ class WasteCategoryController extends Controller
             ], 500);
         }
     }
+    
 
     public function destroy($id)
     {
         try {
             $category = WasteCategory::findOrFail($id);
-            $category->delete();
+            $hasRelations = Waste::where('category_id', $id)->exists();
 
-            return response()->json([
-                'message' => 'Waste category deleted successfully.',
-            ], 200);
+            if ($hasRelations) {
+                $category->update(['is_visible' => false]);
+
+                return response()->json([
+                    'message' => 'Waste category hidden successfully.',
+                    'is_fully_deleted' => false
+                ], 200);
+            } else {
+                $category->delete();
+
+                return response()->json([
+                    'message' => 'Waste category deleted successfully.',
+                    'is_fully_deleted' => true
+                ], 200);
+            }
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to delete waste category.',
@@ -143,3 +159,4 @@ class WasteCategoryController extends Controller
         }
     }
 }
+

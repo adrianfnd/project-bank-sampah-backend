@@ -19,6 +19,7 @@ return new class extends Migration
             $table->decimal('price_per_unit', 10, 2);
             $table->enum('unit', ['kg', 'piece']);
             $table->enum('type', ['organic', 'anorganic', 'b3']);
+            $table->boolean('is_visible')->default(true);
             $table->timestamps();
         });
     }
