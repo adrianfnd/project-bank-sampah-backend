@@ -118,13 +118,22 @@ class WasteCategoryController extends Controller
     
         try {
             $category = WasteCategory::findOrFail($id);
-
             $updateData = array_merge($request->all(), ['is_visible' => true]);
             $category->update($updateData);
+            $category = $category->fresh();
     
             return response()->json([
                 'message' => 'Waste category updated successfully.',
-                'data' => $category,
+                'data' => [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'price_per_unit' => (double) $category->price_per_unit,
+                    'unit' => $category->unit,
+                    'type' => $category->type,
+                    'is_visible' => (boolean) $category->is_visible,
+                    'created_at' => $category->created_at,
+                    'updated_at' => $category->updated_at,
+                ],
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -132,8 +141,7 @@ class WasteCategoryController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
-    }
-    
+    }    
 
     public function destroy($id)
     {
