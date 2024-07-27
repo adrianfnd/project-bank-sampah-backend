@@ -178,10 +178,10 @@ class UserController extends Controller
     
         $profileData = [
             'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'phone_number' => $user->phone_number,
-            'address' => $user->address,
+            'name' => $user->name ?? null,
+            'email' => $user->email ?? null,
+            'phone_number' => $user->phone_number ?? null,
+            'address' => $user->address ?? null,
         ];
     
         if ($user->image !== null) {
