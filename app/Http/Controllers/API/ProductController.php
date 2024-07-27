@@ -14,12 +14,14 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         try {
-            $products = Product::where('is_visible', true)->get();
-    
+            $products = Product::where('is_visible', true)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
             $products->each(function ($product) use ($request) {
                 $product->image_url = $request->getSchemeAndHttpHost() . Storage::url('images/products/' . $product->image);
             });
-    
+
             return response()->json([
                 'data' => $products,
             ], 200);
@@ -34,12 +36,14 @@ class ProductController extends Controller
     public function staffIndex(Request $request)
     {
         try {
-            $products = Product::where('is_visible', true)->get();
-    
+            $products = Product::where('is_visible', true)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
             $products->each(function ($product) use ($request) {
                 $product->image_url = $request->getSchemeAndHttpHost() . Storage::url('images/products/' . $product->image);
             });
-    
+
             return response()->json([
                 'data' => $products,
             ], 200);

@@ -13,14 +13,17 @@ class WasteCategoryController extends Controller
     public function list(Request $request)
     {
         try {
-            $categories = WasteCategory::where('is_visible', true)->get()->map(function($category) {
-                return [
-                    'name' => $category->name,
-                    'type' => ucfirst($category->type),
-                    'price_per_unit' => number_format($category->price_per_unit, 0, ',', '.') . '/' . $category->unit,
-                ];
-            });
-
+            $categories = WasteCategory::where('is_visible', true)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function($category) {
+                    return [
+                        'name' => $category->name,
+                        'type' => ucfirst($category->type),
+                        'price_per_unit' => number_format($category->price_per_unit, 0, ',', '.') . '/' . $category->unit,
+                    ];
+                });
+    
             return response()->json([
                 'data' => $categories,
             ], 200);
@@ -31,12 +34,14 @@ class WasteCategoryController extends Controller
             ], 500);
         }
     }
-
+    
     public function index(Request $request)
     {
         try {
-            $categories = WasteCategory::where('is_visible', true)->get();
-
+            $categories = WasteCategory::where('is_visible', true)
+                ->orderBy('created_at', 'desc')
+                ->get();
+    
             return response()->json([
                 'data' => $categories,
             ], 200);
@@ -46,7 +51,7 @@ class WasteCategoryController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
-    }
+    }    
 
     public function show($id)
     {
