@@ -357,8 +357,8 @@ class WasteCollectionController extends Controller
     
             $totalPoints = 0;
             $wasteByType = [
-                'organic' => 0,
-                'anorganic' => 0,
+                'organik' => 0,
+                'anorganik' => 0,
                 'b3' => 0,
             ];
     
@@ -408,8 +408,8 @@ class WasteCollectionController extends Controller
     
             $totalPoints = 0;
             $wasteByType = [
-                'organic' => 0,
-                'anorganic' => 0,
+                'organik' => 0,
+                'anorganik' => 0,
                 'b3' => 0,
             ];
     
