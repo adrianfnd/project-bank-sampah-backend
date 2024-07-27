@@ -169,7 +169,7 @@ class UserController extends Controller
     public function profileStaff()
     {
         $user = Auth::user();
-
+    
         if (!$user || $user->role->name !== 'staff') {
             return response()->json([
                 'message' => 'Unauthorized',
@@ -181,6 +181,7 @@ class UserController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'phone_number' => $user->phone_number,
+            'address' => $user->address,
         ];
     
         if ($user->image !== null) {
