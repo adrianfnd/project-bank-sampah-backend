@@ -34,7 +34,7 @@ class ProductController extends Controller
     public function staffIndex(Request $request)
     {
         try {
-            $products = Product::all();
+            $products = Product::where('is_visible', true)->get();
     
             $products->each(function ($product) use ($request) {
                 $product->image_url = $request->getSchemeAndHttpHost() . Storage::url('images/products/' . $product->image);
@@ -77,24 +77,26 @@ class ProductController extends Controller
             'stock' => 'required|integer',
             'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation error',
                 'errors' => $validator->errors(),
             ], 422);
         }
-
+    
         try {
             $image = $request->file('image');
             $imageName = time() . '_' . $request->name . '.' . $image->getClientOriginalExtension();
             $imageName = preg_replace('/[^a-zA-Z0-9_.]/', '_', $imageName);
             $path = $image->storeAs('public/images/products', $imageName);
-
-            $product = Product::create(array_merge($request->all(), ['image' => $imageName]));
-
+    
+            $productData = array_merge($request->all(), ['image' => $imageName, 'is_visible' => true]);
+    
+            $product = Product::create($productData);
+    
             $product->image_url = $request->getSchemeAndHttpHost() . Storage::url('images/products/' . $product->image);
-
+    
             return response()->json([
                 'message' => 'Product created successfully.',
                 'data' => $product,
@@ -105,7 +107,7 @@ class ProductController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
-    }
+    }    
 
     public function update(Request $request, $id)
     {
@@ -128,6 +130,7 @@ class ProductController extends Controller
             $product = Product::findOrFail($id);
     
             $updateData = $request->only(['name', 'description', 'point_cost', 'stock']);
+            $updateData['is_visible'] = true;
     
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
@@ -152,7 +155,7 @@ class ProductController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
-    }
+    }    
 
     public function destroy($id)
     {
