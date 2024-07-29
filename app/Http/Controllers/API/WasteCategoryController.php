@@ -99,54 +99,6 @@ class WasteCategoryController extends Controller
             ], 500);
         }
     }
-    
-    // public function update(Request $request, $id)
-    // {
-    //     $validator = Validator::make($request->all(), [
-    //         'name' => 'string|unique:waste_categories,name,' . $id,
-    //         'price_per_unit' => 'numeric|min:0',
-    //         'unit' => 'in:kg,piece',
-    //         'type' => 'in:organik,anorganik,b3',
-    //     ]);
-    
-    //     if ($validator->fails()) {
-    //         return response()->json([
-    //             'message' => 'Validation error',
-    //             'errors' => $validator->errors(),
-    //         ], 422);
-    //     }
-    
-    //     try {
-    //         $category = WasteCategory::findOrFail($id);
-    //         $updateData = array_merge($request->all(), ['is_visible' => true]);
-
-    //         if (isset($updateData['price_per_unit'])) {
-    //             $updateData['price_per_unit'] = (float) $updateData['price_per_unit'];
-    //          }
-
-    //         $category->update($updateData);
-    //         $category = $category->fresh();
-    
-    //         return response()->json([
-    //             'message' => 'Waste category updated successfully.',
-    //             'data' => [
-    //                 'id' => $category->id,
-    //                 'name' => $category->name,
-    //                 'price_per_unit' => (double) $category->price_per_unit,
-    //                 'unit' => $category->unit,
-    //                 'type' => $category->type,
-    //                 'is_visible' => (boolean) $category->is_visible,
-    //                 'created_at' => $category->created_at,
-    //                 'updated_at' => $category->updated_at,
-    //             ],
-    //         ], 200);
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'message' => 'Failed to update waste category.',
-    //             'error' => $e->getMessage(),
-    //         ], 500);
-    //     }
-    // }    
 
     public function update(Request $request, $id)
     {
