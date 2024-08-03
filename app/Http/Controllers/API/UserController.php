@@ -200,28 +200,29 @@ class UserController extends Controller
     public function updateProfileStaff(Request $request)
     {
         $user = Auth::user();
-
+    
         if (!$user || $user->role->name !== 'staff') {
             return response()->json([
                 'message' => 'Unauthorized',
             ], 401);
         }
-
+    
         $rules = [
             'name' => 'required|string|max:255',
+            'address' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ];
-
+    
         if ($user->email !== null) {
             $rules['email'] = 'nullable|string|email|max:255|unique:users,email,' . $user->id;
         }
-
+    
         if ($user->phone_number !== null) {
             $rules['phone_number'] = 'nullable|string|max:15|unique:users,phone_number,' . $user->id;
         }
-
+    
         $validator = Validator::make($request->all(), $rules);
-
+    
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
@@ -229,31 +230,33 @@ class UserController extends Controller
                 'errors' => $validator->errors(),
             ], 400);
         }
-
+    
         if ($request->hasFile('image')) {
             $image = $request->file('image');
             $imageName = time().'_'.str_replace(' ', '_', $user->name).'.'.$image->getClientOriginalExtension();
             $path = $image->storeAs('public/images/users', $imageName);
-
+    
             if ($user->image) {
                 Storage::delete('public/images/users/'.$user->image);
             }
-
+    
             $user->image = $imageName;
         }
-
+    
         $user->name = $request->name;
+        $user->address = $request->address;
         $user->email = $request->email;
         $user->phone_number = $request->phone_number;
-
+    
         $user->save();
-
+    
         return response()->json([
             'success' => true,
             'message' => 'Profile updated successfully',
             'data' => [
                 'id' => $user->id,
                 'name' => $user->name,
+                'address' => $user->address,
                 'email' => $user->email,
                 'phone_number' => $user->phone_number,
                 'image_url' => $user->image ? url(Storage::url('images/users/'.$user->image)) : null,
@@ -262,6 +265,7 @@ class UserController extends Controller
             ],
         ], 200);
     }
+    
 
     public function updatePasswordStaff(Request $request)
     {

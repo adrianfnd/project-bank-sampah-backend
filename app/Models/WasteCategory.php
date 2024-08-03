@@ -14,6 +14,7 @@ class WasteCategory extends Model
         'price_per_unit', 
         'unit',
         'type',
+        'is_visible',
     ];
 
     public function wastes()
