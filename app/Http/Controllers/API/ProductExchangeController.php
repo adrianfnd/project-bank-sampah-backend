@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Models\Product;
 use App\Models\ProductExchange;
 use App\Models\User;
+use App\Models\Notification;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,6 +40,7 @@ class ProductExchangeController extends Controller
 
         $user = Auth::user();
         $totalPoints = 0;
+        $exchangedProducts = [];
 
         foreach ($productIds as $index => $productId) {
             $product = Product::find($productId);
@@ -52,6 +54,10 @@ class ProductExchangeController extends Controller
 
             $quantity = $quantities[$index] ?? 1;
             $totalPoints += $product->point_cost * $quantity;
+            $exchangedProducts[] = [
+                'name' => $product->name,
+                'quantity' => $quantity
+            ];
         }
 
         if ($user->current_point < $totalPoints) {
@@ -84,6 +90,29 @@ class ProductExchangeController extends Controller
 
             $user->save();
 
+            $productList = $this->formatProductList($exchangedProducts);
+            Notification::create([
+                'title' => 'Penukaran Produk',
+                'user_id' => $user->id,
+                'description' => "Anda telah berhasil menukarkan poin ke produk: " . $productList,
+                'type' => 'penukaran_produk',
+                'status' => 'unread',
+            ]);
+
+            $staffUser = User::whereHas('role', function ($query) {
+                $query->where('name', 'staff');
+            })->first();
+
+            if ($staffUser) {
+                Notification::create([
+                    'title' => 'Penukaran Produk',
+                    'user_id' => $staffUser->id,
+                    'description' => "Nasabah dengan nama \"{$user->name}\" telah menukarkan poin ke produk: " . $productList,
+                    'type' => 'penukaran_produk',
+                    'status' => 'unread',
+                ]);
+            }
+
             return response()->json([
                 'message' => 'Product exchange successful'
             ], 200);
@@ -93,5 +122,14 @@ class ProductExchangeController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    private function formatProductList($products)
+    {
+        $formattedList = [];
+        foreach ($products as $product) {
+            $formattedList[] = "{$product['name']} (x{$product['quantity']})";
+        }
+        return implode(", ", $formattedList);
     }
 }

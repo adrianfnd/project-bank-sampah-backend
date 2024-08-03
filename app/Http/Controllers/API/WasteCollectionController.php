@@ -121,6 +121,14 @@ class WasteCollectionController extends Controller
                 'longitude' => $request->longitude,
                 'created_by' => $user->id,
             ]);
+
+            Notification::create([
+                'title' => 'Permintaan Penjemputan Sampah Berhasil',
+                'user_id' => $user->id,
+                'description' => 'Anda berhasil mengirim permintaan penjemputan sampah, silahkan tunggu petugas mengkonfirmasi permintaan anda dan cek status penjemputan di riwayat.',
+                'type' => 'penjemputan_sampah',
+                'status' => 'unread',
+            ]);
     
             $adminUser = User::whereHas('role', function ($query) {
                 $query->where('name', 'staff');
@@ -177,6 +185,14 @@ class WasteCollectionController extends Controller
 
             $wasteCollection->confirmation_status = 'dikonfirmasi';
             $wasteCollection->save();
+
+            Notification::create([
+                'title' => 'Permintaan Penjemputan Sampah Berhasil Dikonfirmasi',
+                'user_id' => $wasteCollection->user_id,
+                'description' => 'Permintaan penjemputan sampah anda telah di konfirmasi oleh petugas, silahkan tunggu petugas datang untuk mengambil sampah.',
+                'type' => 'penjemputan_sampah',
+                'status' => 'unread',
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -249,9 +265,9 @@ class WasteCollectionController extends Controller
             $user->save();
     
             Notification::create([
-                'title' => 'Penjemputan Sampah Berhasil',
+                'title' => 'Setoran Sampah Berhasil',
                 'user_id' => $wasteCollection->user_id,
-                'description' => 'Penjemputan sampah Anda telah berhasil dilakukan.',
+                'description' => 'Setoran sampah anda telah berhasil, silahkan cek riwayat dan poin anda yang telah masuk.',
                 'type' => 'penjemputan_sampah',
                 'status' => 'unread',
             ]);
