@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class WasteCollectionController extends Controller
 {
@@ -23,23 +24,35 @@ class WasteCollectionController extends Controller
             $wasteCollections = WasteCollection::with(['user'])
                 ->orderBy('created_at', 'desc')
                 ->get()
-                ->groupBy('confirmation_status');
-    
+                ->groupBy(function ($item) {
+                    return Carbon::parse($item->created_at)->format('Y-m-d');
+                });
+
             $data = [];
-    
-            foreach ($wasteCollections as $status => $collections) {
-                $sortedCollections = $collections->sortByDesc('created_at');
-                $data[$status] = $sortedCollections->map(function ($collection) {
-                    return [
-                        'id' => $collection->id,
-                        'user' => $collection->user->name,
-                        'address' => $collection->address,
-                        'date' => $collection->collection_date,
-                        'confirmation_status' => ucwords(str_replace('_', ' ', $collection->confirmation_status)),
-                    ];
-                })->values();
+
+            foreach ($wasteCollections as $date => $collections) {
+                $groupedByStatus = $collections->groupBy('confirmation_status');
+                $formattedCollections = [];
+
+                foreach ($groupedByStatus as $status => $statusCollections) {
+                    $formattedCollections[$status] = $statusCollections->map(function ($collection) {
+                        return [
+                            'id' => $collection->id,
+                            'user' => $collection->user->name,
+                            'address' => $collection->address,
+                            'date' => $collection->collection_date,
+                            'created_at' => $collection->created_at,
+                            'confirmation_status' => ucwords(str_replace('_', ' ', $collection->confirmation_status)),
+                        ];
+                    })->values();
+                }
+
+                $data[] = [
+                    'date' => $date,
+                    'collections' => $formattedCollections
+                ];
             }
-    
+
             return response()->json($data);
         } catch (\Exception $e) {
             return response()->json([

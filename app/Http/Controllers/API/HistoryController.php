@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class HistoryController extends Controller
 {
@@ -21,55 +22,62 @@ class HistoryController extends Controller
     {
         try {
             $user = Auth::user();
-    
+
             if (!$user) {
                 return response()->json([
                     'message' => 'Unauthorized',
                 ], 401);
             }
-    
+
             $validator = Validator::make($request->all(), [
                 'month' => 'required|integer|min:1|max:12',
                 'year' => 'required|integer|min:1900|max:' . date('Y'),
             ]);
-    
+
             if ($validator->fails()) {
                 return response()->json([
                     'message' => 'Validation error',
                     'errors' => $validator->errors(),
                 ], 400);
             }
-    
+
             $month = $request->input('month');
             $year = $request->input('year');
-    
+
             $wasteCollections = WasteCollection::where('user_id', $user->id)
-                ->whereMonth('collection_date', $month)
-                ->whereYear('collection_date', $year)
-                ->orderBy('collection_date', 'desc')
+                ->whereMonth('created_at', $month)
+                ->whereYear('created_at', $year)
+                ->orderBy('created_at', 'desc')
                 ->get();
-    
-            $data = $wasteCollections->map(function($collection) {
-                $wastes = Waste::where('waste_collection_id', $collection->id)->get();
-                
-                $details = $wastes->groupBy('category_id')->map(function($group) {
-                    $category = WasteCategory::find($group->first()->category_id);
-                    return [
-                        'category_name' => $category ? $category->name : 'Unknown',
-                        'weight' => $group->sum('weight')
-                    ];
-                })->values();
-                
+
+            $data = $wasteCollections->groupBy(function ($item) {
+                return Carbon::parse($item->created_at)->format('Y-m-d');
+            })->map(function ($collections, $date) {
                 return [
-                    'date' => $collection->collection_date,
-                    'description' => $collection->description,
-                    'weight_total' => $wastes->sum('weight'),
-                    'point_total' => $wastes->sum('point'),
-                    'confirmation_status' => ucwords(str_replace('_', ' ', $collection->confirmation_status)),
-                    'details' => $details,
+                    'date' => $date,
+                    'collections' => $collections->map(function ($collection) {
+                        $wastes = Waste::where('waste_collection_id', $collection->id)->get();
+                        
+                        $details = $wastes->groupBy('category_id')->map(function($group) {
+                            $category = WasteCategory::find($group->first()->category_id);
+                            return [
+                                'category_name' => $category ? $category->name : 'Unknown',
+                                'weight' => $group->sum('weight')
+                            ];
+                        })->values();
+                        
+                        return [
+                            'description' => $collection->description,
+                            'weight_total' => $wastes->sum('weight'),
+                            'point_total' => $wastes->sum('point'),
+                            'confirmation_status' => ucwords(str_replace('_', ' ', $collection->confirmation_status)),
+                            'created_at' => $collection->created_at,
+                            'details' => $details,
+                        ];
+                    })->values()
                 ];
-            })->sortByDesc('date')->values();
-    
+            })->values();
+
             return response()->json([
                 'data' => $data,
             ], 200);
@@ -80,6 +88,7 @@ class HistoryController extends Controller
             ], 500);
         }
     }
+
     
     public function pointRedemptionHistoryCostumer(Request $request)
     {
@@ -190,60 +199,67 @@ class HistoryController extends Controller
     {
         try {
             $user = Auth::user();
-    
+
             if (!$user) {
                 return response()->json([
                     'message' => 'Unauthorized',
                 ], 401);
             }
-    
+
             $validator = Validator::make($request->all(), [
                 'month' => 'required|integer|min:1|max:12',
                 'year' => 'required|integer|min:1900|max:' . date('Y'),
             ]);
-    
+
             if ($validator->fails()) {
                 return response()->json([
                     'message' => 'Validation error',
                     'errors' => $validator->errors(),
                 ], 400);
             }
-    
+
             $month = $request->input('month');
             $year = $request->input('year');
-    
-            $query = WasteCollection::whereMonth('collection_date', $month)
-                ->whereYear('collection_date', $year)
-                ->orderBy('collection_date', 'desc');
+
+            $query = WasteCollection::whereMonth('created_at', $month)
+                ->whereYear('created_at', $year)
+                ->orderBy('created_at', 'desc');
 
             if ($request->has('nama_nasabah')) {
                 $query->where('name', 'like', '%' . $request->nama_nasabah . '%');
             }
-    
+
             $wasteCollections = $query->get();
-    
-            $data = $wasteCollections->map(function($collection) {
-                $wastes = Waste::where('waste_collection_id', $collection->id)->get();
-                
-                $details = $wastes->groupBy('category_id')->map(function($group) {
-                    $category = WasteCategory::find($group->first()->category_id);
-                    return [
-                        'category_name' => $category ? $category->name : 'Unknown',
-                        'weight' => $group->sum('weight')
-                    ];
-                })->values();
-                
+
+            $data = $wasteCollections->groupBy(function ($item) {
+                return Carbon::parse($item->created_at)->format('Y-m-d');
+            })->map(function ($collections, $date) {
                 return [
-                    'date' => $collection->collection_date,
-                    'name' => $collection->name,
-                    'description' => $collection->description,
-                    'weight_total' => $wastes->sum('weight'),
-                    'point_total' => $wastes->sum('point'),
-                    'confirmation_status' => ucwords(str_replace('_', ' ', $collection->confirmation_status)),
-                    'details' => $details,
+                    'date' => $date,
+                    'collections' => $collections->map(function ($collection) {
+                        $wastes = Waste::where('waste_collection_id', $collection->id)->get();
+                        
+                        $details = $wastes->groupBy('category_id')->map(function($group) {
+                            $category = WasteCategory::find($group->first()->category_id);
+                            return [
+                                'category_name' => $category ? $category->name : 'Unknown',
+                                'weight' => $group->sum('weight')
+                            ];
+                        })->values();
+                        
+                        return [
+                            'name' => $collection->name,
+                            'description' => $collection->description,
+                            'weight_total' => $wastes->sum('weight'),
+                            'point_total' => $wastes->sum('point'),
+                            'confirmation_status' => ucwords(str_replace('_', ' ', $collection->confirmation_status)),
+                            'created_at' => $collection->created_at,
+                            'details' => $details,
+                        ];
+                    })->values()
                 ];
-            })->sortByDesc('date')->values();
-    
+            })->values();
+
             return response()->json([
                 'data' => $data,
             ], 200);
