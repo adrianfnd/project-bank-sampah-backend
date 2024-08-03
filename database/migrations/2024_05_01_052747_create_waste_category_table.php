@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('waste_categories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->decimal('price_per_unit', 10, 2);
+            $table->double('price_per_unit', 10, 2);
             $table->enum('unit', ['kg', 'piece']);
             $table->enum('type', ['organik', 'anorganik', 'b3']);
             $table->boolean('is_visible')->default(true);
