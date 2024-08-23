@@ -178,6 +178,73 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             if (Auth::user()->email_verified_at) {
                 $user = Auth::user();
+
+                if (!$user->email_verified_at) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Email not verified',
+                        'error' => 'Unauthenticated',
+                    ], 401);
+                }
+
+                if ($user->role->name !== 'costumer') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Unauthorized: You are not a costumer',
+                        'error' => 'Unauthorized',
+                    ], 403);
+                }
+
+                $token = $user->createToken('authToken')->plainTextToken;
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Login successful',
+                    'data' => [
+                        'token' => $token,
+                        'user' => $user,
+                    ],
+                ], 200);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email not verified',
+                    'error' => 'Unauthenticated',
+                ], 401);
+            }
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid credentials',
+            'error' => 'Unauthenticated',
+        ], 401);
+    }
+
+    public function loginStaff(Request $request)
+    {
+        $credentials = $request->only('email', 'password');
+
+        if (Auth::attempt($credentials)) {
+            if (Auth::user()->email_verified_at) {
+                $user = Auth::user();
+
+                if (!$user->email_verified_at) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Email not verified',
+                        'error' => 'Unauthenticated',
+                    ], 401);
+                }
+
+                if ($user->role->name === 'costumer') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Unauthorized: You are not a admin or staff',
+                        'error' => 'Unauthorized',
+                    ], 403);
+                }
+
                 $token = $user->createToken('authToken')->plainTextToken;
 
                 return response()->json([

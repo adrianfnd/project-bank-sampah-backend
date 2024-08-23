@@ -50,12 +50,12 @@ class HistoryController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            $data = $wasteCollections->groupBy(function ($item) {
-                return Carbon::parse($item->created_at)->format('Y-m-d');
-            })->map(function ($collections, $date) {
-                return [
-                    'date' => $date,
-                    'collections' => $collections->map(function ($collection) {
+                $data = $wasteCollections->groupBy(function ($item) {
+                    return Carbon::parse($item->created_at)->format('d M Y');
+                })->map(function ($collections, $date) {
+                    return [
+                        'date' => $date,
+                        'collections' => $collections->map(function ($collection) {
                         $wastes = Waste::where('waste_collection_id', $collection->id)->get();
                         
                         $details = $wastes->groupBy('category_id')->map(function($group) {
@@ -232,7 +232,7 @@ class HistoryController extends Controller
             $wasteCollections = $query->get();
 
             $data = $wasteCollections->groupBy(function ($item) {
-                return Carbon::parse($item->created_at)->format('Y-m-d');
+                return Carbon::parse($item->created_at)->format('d M Y');
             })->map(function ($collections, $date) {
                 return [
                     'date' => $date,

@@ -47,21 +47,23 @@ class UsersSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now()
             ],
-            [
-                'id' => rand(10000, 99999),
-                'name' => 'Customer User',
-                'address' => 'Jl Bandung',
-                'email' => 'customer@gmail.com',
-                'phone_number' => '0812345678903',
-                'image' => null,
-                'otp' => null,
-                'email_verified_at' => now(),
-                'password' => bcrypt('password'),
-                'current_point' => 0,
-                'role_id' => $roles['costumer'],
-                'created_at' => now(),
-                'updated_at' => now()
-            ]
+
+            // Development
+            // [
+            //     'id' => rand(10000, 99999),
+            //     'name' => 'Customer User',
+            //     'address' => 'Jl Bandung',
+            //     'email' => 'customer@gmail.com',
+            //     'phone_number' => '0812345678903',
+            //     'image' => null,
+            //     'otp' => null,
+            //     'email_verified_at' => now(),
+            //     'password' => bcrypt('password'),
+            //     'current_point' => 0,
+            //     'role_id' => $roles['costumer'],
+            //     'created_at' => now(),
+            //     'updated_at' => now()
+            // ]
         ];
 
         DB::table('users')->insert($users);

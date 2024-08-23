@@ -17,21 +17,21 @@ class DatabaseSeeder extends Seeder
             UserRolePermissionSeeder::class,
             UserRoleHasPermissionSeeder::class,
             FaqSeeder::class,
+            WasteCategorySeeder::class,
+            WasteBanksSeeder::class,
+            UsersSeeder::class,
         ]);
 
         // Development
-        $this->call([
-            UsersSeeder::class,
-            XenditLogsSeeder::class,
-            WasteBanksSeeder::class,
-            WasteCollectionsSeeder::class,
-            WasteCategorySeeder::class,
-            WastesSeeder::class,
-            TransactionsSeeder::class,
-            ProductsSeeder::class,
-            ProductExchangesSeeder::class,
-            PpobPaymentsSeeder::class,
-            NotificationsSeeder::class,
-        ]);
+        // $this->call([
+        //     XenditLogsSeeder::class,
+        //     WasteCollectionsSeeder::class,
+        //     WastesSeeder::class,
+        //     TransactionsSeeder::class,
+        //     ProductsSeeder::class,
+        //     ProductExchangesSeeder::class,
+        //     PpobPaymentsSeeder::class,
+        //     NotificationsSeeder::class,
+        // ]);
     }
 }

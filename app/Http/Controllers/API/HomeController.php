@@ -40,45 +40,30 @@ class HomeController extends Controller
             $month = $request->query('month');
             $year = $request->query('year');
     
-            $wasteCategories = WasteCategory::all()->pluck('type', 'id');
-            $wasteCollections = [];
-    
-            $wasteData = Waste::join('waste_collections', 'wastes.waste_collection_id', '=', 'waste_collections.id')
-                ->where('waste_collections.user_id', $user->id)
-                ->whereMonth('waste_collections.collection_date', $month)
-                ->whereYear('waste_collections.collection_date', $year)
-                ->select(
-                    'waste_collections.id as collection_id',
-                    'waste_collections.collection_date',
-                    'wastes.category_id',
-                    DB::raw('SUM(wastes.weight) as total_weight'),
-                    DB::raw('SUM(wastes.point) as total_point')
-                )
-                ->groupBy('waste_collections.id', 'waste_collections.collection_date', 'wastes.category_id')
+            $wasteCollections = WasteCollection::where('user_id', $user->id)
+                ->whereMonth('created_at', $month)
+                ->whereYear('created_at', $year)
+                ->where('confirmation_status', 'berhasil')
                 ->get();
     
-            foreach ($wasteData as $waste) {
-                $categoryType = $wasteCategories[$waste->category_id];
-                if (!isset($wasteCollections[$categoryType])) {
-                    $wasteCollections[$categoryType] = [
-                        'waste_weight' => 0,
-                        'waste_point' => 0,
-                        'collection_date' => $waste->collection_date
-                    ];
-                }
-                $wasteCollections[$categoryType]['waste_weight'] += $waste->total_weight;
-                $wasteCollections[$categoryType]['waste_point'] += $waste->total_point;
-            }
+            $totalPoint = $wasteCollections->sum('point_total');
+            $totalWeight = $wasteCollections->sum('weight_total');
     
-            $totalPoint = WasteCollection::where('user_id', $user->id)
-                ->whereMonth('collection_date', $month)
-                ->whereYear('collection_date', $year)
-                ->sum('point_total');
+            $lastCollection = $wasteCollections->sortByDesc('created_at')->first();
+    
+            $wasteCollectionsByType = [
+                'anorganik' => [
+                    'type' => 'anorganik',
+                    'waste_weight' => $totalWeight,
+                    'waste_point' => $totalPoint,
+                    'collection_date' => $lastCollection ? date('Y-m-d', strtotime($lastCollection->created_at)) : null
+                ]
+            ];
     
             return response()->json([
                 'data' => [
                     'total_point' => $totalPoint,
-                    'waste_collections' => $wasteCollections,
+                    'waste_collections' => $wasteCollectionsByType
                 ]
             ], 200);
         } catch (\Exception $e) {

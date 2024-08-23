@@ -213,7 +213,7 @@ class WasteCollectionController extends Controller
             $wasteCategories = WasteCategory::all();
             $validationRules = [];
             foreach ($wasteCategories as $category) {
-                $validationRules[$category->name] = 'nullable|numeric|min:0';
+                $validationRules[str_replace(' ', '_', $category->name)] = 'nullable|numeric|min:0';
             }
     
             $validator = Validator::make($request->all(), $validationRules);
@@ -237,7 +237,7 @@ class WasteCollectionController extends Controller
             $totalPoints = 0;
     
             foreach ($wasteCategories as $category) {
-                $amount = $request->input($category->name, 0);
+                $amount = $request->input(str_replace(' ', '_', $category->name), 0);
                 if ($amount > 0) {
                     $weight = $amount;
                     $points = $amount * $category->price_per_unit;
@@ -291,7 +291,7 @@ class WasteCollectionController extends Controller
                 'address' => 'required|string|max:255',
             ];
             foreach ($wasteCategories as $category) {
-                $validationRules[$category->name] = 'nullable|numeric|min:0';
+                $validationRules[str_replace(' ', '_', $category->name)] = 'nullable|numeric|min:0';
             }
     
             $validator = Validator::make($request->all(), $validationRules);
@@ -330,7 +330,7 @@ class WasteCollectionController extends Controller
             $totalPoints = 0;
     
             foreach ($wasteCategories as $category) {
-                $amount = $request->input($category->name, 0);
+                $amount = $request->input(str_replace(' ', '_', $category->name), 0);
                 if ($amount > 0) {
                     $weight = $amount;
                     $points = $amount * $category->price_per_unit;
